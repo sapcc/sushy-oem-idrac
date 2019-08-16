@@ -16,25 +16,37 @@
 import json
 import mock
 
+from oslotest.base import BaseTestCase
+import sushy
 from sushy.resources.manager import manager
-from sushy.tests.unit import base
 
 
-class MainTestCase(base.TestCase):
+class ManagerTestCase(BaseTestCase):
 
     def setUp(self):
-        super(MainTestCase, self).setUp()
+        super(ManagerTestCase, self).setUp()
         self.conn = mock.Mock()
         with open('sushy_oem_dellemc/tests/unit/json_samples/'
                   'manager.json') as f:
             self.conn.get.return_value.json.return_value = json.load(f)
+        mock_response = self.conn.post.return_value
+        mock_response.status_code = 202
         self.manager = manager.Manager(self.conn, '/redfish/v1/Managers/BMC',
                                        redfish_version='1.0.2')
 
-    def test_oem_vendors(self):
+    def test_import_system_configuration_uri(self):
         oem = self.manager.get_oem_extension('Dell')
 
         self.assertEqual(
             '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
             '.ImportSystemConfiguration',
             oem.import_system_configuration_uri)
+
+    def test_set_virtual_boot_device_cd(self):
+        oem = self.manager.get_oem_extension('Dell')
+
+        oem.set_virtual_boot_device(sushy.VIRTUAL_MEDIA_CD)
+
+        self.conn.post.assert_called_once_with(
+            '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
+            '.ImportSystemConfiguration', mock.ANY)

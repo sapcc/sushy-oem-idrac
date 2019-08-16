@@ -16,11 +16,11 @@
 import json
 import mock
 
+from oslotest.base import BaseTestCase
 from sushy import main
-from sushy.tests.unit import base
 
 
-class RootTestCase(base.TestCase):
+class RootTestCase(BaseTestCase):
 
     @mock.patch('sushy.auth.SessionOrBasicAuth', autospec=True)
     @mock.patch('sushy.connector.Connector', autospec=True)

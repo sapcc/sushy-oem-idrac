@@ -17,8 +17,6 @@ from sushy.resources import base
 from sushy.resources import common
 from sushy.resources.oem import base as oem_base
 
-import eventlet
-
 LOG = logging.getLogger(__name__)
 
 
@@ -67,61 +65,45 @@ class DellManagerExtension(oem_base.OEMResourceBase):
     def import_system_configuration_uri(self):
         return self._actions.import_system_configuration.target_uri
 
-    def set_virtual_boot_device(cls, device, persistent=False):
+    def set_virtual_boot_device(self, device, persistent=False):
         """Set boot device for a node.
 
         Dell iDRAC Redfish implementation does not support setting
         boot device to virtual media via standard Redfish means.
         However, this still can be done via an OEM extension.
 
-        :param task: a TaskManager instance.
         :param device: Boot device. Values are vendor-specific.
         :param persistent: Whether to set next-boot, or make the change
             permanent. Default: False.
-        :raises: InvalidParameterValue if the validation of the
-            ManagementInterface fails.
+        :raises: InvalidParameterValue if Dell OEM extension can't
+            be used.
+        :raises: ExtensionError on failure to perform requested
+            operation
         """
         try:
-            magic_saucer = cls.MAGIC_SAUCER[device]
+            magic_saucer = self.MAGIC_SAUCER[device]
 
         except KeyError:
             raise sushy.exceptions.InvalidParameterValue(
-                'Unknown or unsupported device %s' % device)
+                error='Unknown or unsupported device %s' % device)
 
-        system = sushy.get_system(task.node)
+        # TODO (etingof): figure out if on-time or persistent boot can at
+        # all be implemented via this OEM call
 
-        for manager in system.managers:
+        response = self._conn.post(
+            self.import_system_configuration_uri, data=magic_saucer)
 
-            # NOTE (etingof): this call should make sushy go fishing for
-            # sushy extensions installed on the system. Then find one
-            # for 'Dell' implementing 'Manager' resource extension and return
-            # it here.
-            manager_oem = manager.get_oem_extension('Dell')
+        if response.status_code != 202:
+            raise sushy.exceptions.ExtensionError(
+                error='Dell OEM action ImportSystemConfiguration fails '
+                      'with code %s' % response.status_code)
 
-            if not manager_oem:
-                continue
+        LOG.info("Set boot device to %(device)s via "
+                 "Dell OEM magic spell", {'device': device})
 
-            manager_oem.import_system_configuration(
-                shared_configuration={'Target': 'ALL'},
-                import_buffer=magic_saucer)
+        # TODO(etingof): extract iDRAC task ID which looks like r"JID_.+?,"
 
-            # TODO (etingof): figure out if on-time or persistent boot can at
-            # all be implemented via this OEM call
-
-            LOG.info("Set node %(node) boot device to %(device) via "
-                     "OEM magic", {'node': task.node.uuid,
-                                   'device': device})
-            break
-
-        else:
-            raise sushy.exceptions.InvalidParameterValue(
-                driver='redfish',
-                reason=_('Dell OEM manager resources not found. Make sure you '
-                         'have sushy Dell OEM extension package installed.'))
-
-        # TODO(etingof): we need to poll Redfish TaskService instead,
-        # but that's not yet implemented in sushy
-        eventlet.sleep(30)
+        # TODO(etingof): poll Redfish TaskService to see when task is completed
 
 
 def get_extension(*args, **kwargs):
