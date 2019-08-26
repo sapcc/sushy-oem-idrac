@@ -17,6 +17,8 @@ from sushy.resources import base
 from sushy.resources import common
 from sushy.resources.oem import base as oem_base
 
+from sushy_oem_dellemc import asynchronous
+
 LOG = logging.getLogger(__name__)
 
 
@@ -90,20 +92,15 @@ class DellManagerExtension(oem_base.OEMResourceBase):
         # TODO (etingof): figure out if on-time or persistent boot can at
         # all be implemented via this OEM call
 
-        response = self._conn.post(
-            self.import_system_configuration_uri, data=magic_saucer)
-
-        if response.status_code != 202:
-            raise sushy.exceptions.ExtensionError(
-                error='Dell OEM action ImportSystemConfiguration fails '
-                      'with code %s' % response.status_code)
+        response = asynchronous.http_call(
+            self._conn, 'post',
+            self.import_system_configuration_uri,
+            data=magic_saucer)
 
         LOG.info("Set boot device to %(device)s via "
                  "Dell OEM magic spell", {'device': device})
 
-        # TODO(etingof): extract iDRAC task ID which looks like r"JID_.+?,"
-
-        # TODO(etingof): poll Redfish TaskService to see when task is completed
+        return response
 
 
 def get_extension(*args, **kwargs):
