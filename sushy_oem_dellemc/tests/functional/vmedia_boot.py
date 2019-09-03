@@ -15,7 +15,7 @@ import sys
 
 import sushy
 
-from sushy_oem_dellemc import reboot
+from sushy_oem_dellemc import utils
 
 USERNAME = 'root'
 PASSWORD = 'calvin'
@@ -95,7 +95,7 @@ def main():
             LOG.info('set boot mode to %s', BOOT_MODE)
 
             # real caller should better not use our way to reboot
-            reboot.reboot_system(system)
+            utils.reboot_system(system)
 
             LOG.info('system rebooted')
 
