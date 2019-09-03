@@ -11,6 +11,7 @@
 # under the License.
 
 import logging
+import time
 
 import sushy
 from sushy.resources import base
@@ -18,6 +19,8 @@ from sushy.resources import common
 from sushy.resources.oem import base as oem_base
 
 from sushy_oem_dellemc import asynchronous
+from sushy_oem_dellemc import constants
+from sushy_oem_dellemc import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -32,7 +35,14 @@ class DellManagerExtension(oem_base.OEMResourceBase):
 
     _actions = DellManagerActionsField('Actions')
 
-    MAGIC_CD_SAUCE = """\
+    ACTION_DATA = {
+        'ShareParameters': {
+            'Target': 'ALL'
+        },
+        'ImportBuffer': None
+    }
+
+    IDRAC_CONFIG_CD = """\
     <SystemConfiguration>\
       <Component FQDD="iDRAC.Embedded.1">\
         <Attribute Name="ServerBoot.1#BootOnce">\
@@ -45,7 +55,7 @@ class DellManagerExtension(oem_base.OEMResourceBase):
     </SystemConfiguration>\
     """
 
-    MAGIC_FLOPPY_SAUCE = """\
+    IDRAC_CONFIG_FLOPPY = """\
         <SystemConfiguration>\
           <Component FQDD="iDRAC.Embedded.1">\
             <Attribute Name="ServerBoot.1#BootOnce">\
@@ -59,15 +69,15 @@ class DellManagerExtension(oem_base.OEMResourceBase):
     """
 
     MAGIC_SAUCER = {
-        sushy.VIRTUAL_MEDIA_FLOPPY: MAGIC_FLOPPY_SAUCE,
-        sushy.VIRTUAL_MEDIA_CD: MAGIC_CD_SAUCE
+        sushy.VIRTUAL_MEDIA_FLOPPY: IDRAC_CONFIG_FLOPPY,
+        sushy.VIRTUAL_MEDIA_CD: IDRAC_CONFIG_CD
     }
 
     @property
     def import_system_configuration_uri(self):
         return self._actions.import_system_configuration.target_uri
 
-    def set_virtual_boot_device(self, device, persistent=False):
+    def set_virtual_boot_device(self, device, persistent=False, system=None):
         """Set boot device for a node.
 
         Dell iDRAC Redfish implementation does not support setting
@@ -89,18 +99,60 @@ class DellManagerExtension(oem_base.OEMResourceBase):
             raise sushy.exceptions.InvalidParameterValue(
                 error='Unknown or unsupported device %s' % device)
 
+        action_data = dict(self.ACTION_DATA, ImportBuffer=magic_saucer)
+
         # TODO (etingof): figure out if on-time or persistent boot can at
         # all be implemented via this OEM call
 
-        response = asynchronous.http_call(
-            self._conn, 'post',
-            self.import_system_configuration_uri,
-            data=magic_saucer)
+        attempts = 10
+        rebooted = False
 
-        LOG.info("Set boot device to %(device)s via "
-                 "Dell OEM magic spell", {'device': device})
+        while True:
+            try:
+                response = asynchronous.http_call(
+                    self._conn, 'post',
+                    self.import_system_configuration_uri,
+                    data=action_data)
 
-        return response
+                LOG.info("Set boot device to %(device)s via "
+                         "Dell OEM magic spell", {'device': device})
+
+                return response
+
+            except (sushy.exceptions.ServerSideError,
+                    sushy.exceptions.BadRequestError) as exc:
+                LOG.warning(
+                    'Dell OEM set boot device failed (attempts left '
+                    '%d): %s', attempts, exc)
+
+                errors = exc.body and exc.body.get(
+                    '@Message.ExtendedInfo') or []
+
+                for error in errors:
+                    message_id = error.get('MessageId')
+
+                    LOG.warning('iDRAC error: %s',
+                                error.get('Message', 'Unknown error'))
+
+                    if message_id == constants.IDRAC_CONFIG_PENDING:
+                        if not rebooted:
+                            LOG.warning(
+                                'Let\'s try to turn it off and on again!')
+                            utils.reboot_system(system)
+                            rebooted = True
+                            break
+
+                    elif message_id == constants.IDRAC_JOB_RUNNING:
+                        pass
+
+                else:
+                    time.sleep(60)
+
+                if not attempts:
+                    LOG.error('Too many retries, bailing out.')
+                    raise
+
+                attempts -= 1
 
 
 def get_extension(*args, **kwargs):

@@ -37,10 +37,22 @@ def http_call(conn, method, *args, **kwargs):
 
     while response.status_code == 202:
         location = response.headers.get('location')
-        retry_after = response.headers.get('retry-after')
-        retry_after = _to_datetime(retry_after)
+        if not location:
+            raise sushy.exceptions.ExtensionError(
+                error='Response %d to HTTP %s with args %s, kwargs %s '
+                      'does not include Location: in '
+                      'header' % (response.status_code, method.upper(),
+                                  args, kwargs))
 
-        time.sleep(max(0, retry_after - datetime.now()))
+        retry_after = response.headers.get('retry-after')
+        if retry_after:
+            retry_after = _to_datetime(retry_after)
+            sleep_for = max(0, retry_after - datetime.now())
+
+        else:
+            sleep_for = 60
+
+        time.sleep(sleep_for)
 
         response = conn.get(location)
 
