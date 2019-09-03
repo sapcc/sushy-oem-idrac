@@ -21,13 +21,16 @@ USERNAME = 'root'
 PASSWORD = 'calvin'
 
 SERVICE_ROOT = 'http://demo.snmplabs.com:80/redfish/v1'
+SERVICE_ROOT = 'https://r640-u11-drac.dev1.kni.lab.eng.bos.redhat.com:443/redfish/v1'
 
 SYSTEM_ID = '437XR1138R2'
+SYSTEM_ID = 'System.Embedded.1'
 
 BOOT_DEVICE = sushy.VIRTUAL_MEDIA_CD
 BOOT_MODE = sushy.BOOT_SOURCE_MODE_UEFI
 
 BOOT_IMAGE = 'http://demo.snmplabs.com/mini.iso'
+BOOT_IMAGE = 'http://10.40.205.36/mini.iso'
 
 LOG = logging.getLogger(__name__)
 
