@@ -84,15 +84,19 @@ def main():
             LOG.info('inserted boot image %s into virtual media', BOOT_IMAGE)
 
             manager_oem.set_virtual_boot_device(
-                BOOT_DEVICE, persistent=False, system=system)
+                BOOT_DEVICE, persistent=False, manager=manager, system=system)
 
             LOG.info('set boot device to %s', BOOT_DEVICE)
 
-            system.set_system_boot_source(
-                BOOT_DEVICE, enabled=sushy.BOOT_SOURCE_ENABLED_ONCE,
-                mode=BOOT_MODE)
+            # NOTE(etingof): patching Systems does not work wirh iDRAC.
+            # We need to set BIOS BootMode attribute via configuration
+            # job, then reboot the system to take effect.
 
-            LOG.info('set boot mode to %s', BOOT_MODE)
+#            system.set_system_boot_source(
+#                BOOT_DEVICE, enabled=sushy.BOOT_SOURCE_ENABLED_ONCE,
+#                mode=BOOT_MODE)
+
+#            LOG.info('set boot mode to %s', BOOT_MODE)
 
             # real caller should better not use our way to reboot
             utils.reboot_system(system)

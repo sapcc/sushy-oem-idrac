@@ -42,33 +42,36 @@ class DellManagerExtension(oem_base.OEMResourceBase):
         'ImportBuffer': None
     }
 
+    # NOTE(etingof): iDRAC job would fail if this XML has
+    # insignificant whitespaces
+
     IDRAC_CONFIG_CD = """\
-    <SystemConfiguration>\
-      <Component FQDD="iDRAC.Embedded.1">\
-        <Attribute Name="ServerBoot.1#BootOnce">\
-          Enabled\
-        </Attribute>\
-        <Attribute Name="ServerBoot.1#FirstBootDevice">\
-          VCD-DVD\
-        </Attribute>\
-      </Component>\
-    </SystemConfiguration>\
-    """
+<SystemConfiguration>\
+<Component FQDD="%s">\
+<Attribute Name="ServerBoot.1#BootOnce">\
+Enabled\
+</Attribute>\
+<Attribute Name="ServerBoot.1#FirstBootDevice">\
+VCD-DVD\
+</Attribute>\
+</Component>\
+</SystemConfiguration>\
+"""
 
     IDRAC_CONFIG_FLOPPY = """\
-        <SystemConfiguration>\
-          <Component FQDD="iDRAC.Embedded.1">\
-            <Attribute Name="ServerBoot.1#BootOnce">\
-              Enabled\
-            </Attribute>\
-            <Attribute Name="ServerBoot.1#FirstBootDevice">\
-              VFDD\
-            </Attribute>\
-          </Component>\
-        </SystemConfiguration>\
-    """
+<SystemConfiguration>\
+<Component FQDD="%s">\
+<Attribute Name="ServerBoot.1#BootOnce">\
+Enabled\
+</Attribute>\
+<Attribute Name="ServerBoot.1#FirstBootDevice">\
+VFDD\
+</Attribute>\
+</Component>\
+</SystemConfiguration>\
+"""
 
-    MAGIC_SAUCER = {
+    IDRAC_MEDIA_TYPES = {
         sushy.VIRTUAL_MEDIA_FLOPPY: IDRAC_CONFIG_FLOPPY,
         sushy.VIRTUAL_MEDIA_CD: IDRAC_CONFIG_CD
     }
@@ -77,7 +80,8 @@ class DellManagerExtension(oem_base.OEMResourceBase):
     def import_system_configuration_uri(self):
         return self._actions.import_system_configuration.target_uri
 
-    def set_virtual_boot_device(self, device, persistent=False, system=None):
+    def set_virtual_boot_device(self, device, persistent=False,
+                                manager=None, system=None):
         """Set boot device for a node.
 
         Dell iDRAC Redfish implementation does not support setting
@@ -93,13 +97,15 @@ class DellManagerExtension(oem_base.OEMResourceBase):
             operation
         """
         try:
-            magic_saucer = self.MAGIC_SAUCER[device]
+            idrac_media = self.IDRAC_MEDIA_TYPES[device]
 
         except KeyError:
             raise sushy.exceptions.InvalidParameterValue(
                 error='Unknown or unsupported device %s' % device)
 
-        action_data = dict(self.ACTION_DATA, ImportBuffer=magic_saucer)
+        idrac_media = idrac_media % manager.identity
+
+        action_data = dict(self.ACTION_DATA, ImportBuffer=idrac_media)
 
         # TODO (etingof): figure out if on-time or persistent boot can at
         # all be implemented via this OEM call
