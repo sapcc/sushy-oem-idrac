@@ -88,7 +88,7 @@ def main():
 
             LOG.info('set boot device to %s', BOOT_DEVICE)
 
-            # NOTE(etingof): patching Systems does not work wirh iDRAC.
+            # NOTE(etingof): patching Systems does not work with iDRAC.
             # We need to set BIOS BootMode attribute via configuration
             # job, then reboot the system to take effect.
 

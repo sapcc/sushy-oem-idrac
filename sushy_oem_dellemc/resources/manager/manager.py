@@ -49,7 +49,7 @@ class DellManagerExtension(oem_base.OEMResourceBase):
 <SystemConfiguration>\
 <Component FQDD="%s">\
 <Attribute Name="ServerBoot.1#BootOnce">\
-Enabled\
+%s\
 </Attribute>\
 <Attribute Name="ServerBoot.1#FirstBootDevice">\
 VCD-DVD\
@@ -62,7 +62,7 @@ VCD-DVD\
 <SystemConfiguration>\
 <Component FQDD="%s">\
 <Attribute Name="ServerBoot.1#BootOnce">\
-Enabled\
+%s\
 </Attribute>\
 <Attribute Name="ServerBoot.1#FirstBootDevice">\
 VFDD\
@@ -103,7 +103,8 @@ VFDD\
             raise sushy.exceptions.InvalidParameterValue(
                 error='Unknown or unsupported device %s' % device)
 
-        idrac_media = idrac_media % manager.identity
+        idrac_media = idrac_media % (
+            manager.identity, 'Disabled' if persistent else 'Enabled')
 
         action_data = dict(self.ACTION_DATA, ImportBuffer=idrac_media)
 
@@ -143,7 +144,9 @@ VFDD\
                     if message_id == constants.IDRAC_CONFIG_PENDING:
                         if not rebooted:
                             LOG.warning(
-                                'Let\'s try to turn it off and on again!')
+                                'Let\'s try to turn it off and on again... '
+                                'This may consume one-time boot settings if '
+                                'set previously!')
                             utils.reboot_system(system)
                             rebooted = True
                             break
