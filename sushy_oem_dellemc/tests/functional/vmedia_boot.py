@@ -27,7 +27,8 @@ SYSTEM_ID = '437XR1138R2'
 SYSTEM_ID = 'System.Embedded.1'
 
 BOOT_DEVICE = sushy.VIRTUAL_MEDIA_CD
-BOOT_MODE = sushy.BOOT_SOURCE_MODE_UEFI
+#BOOT_MODE = sushy.BOOT_SOURCE_MODE_UEFI
+BOOT_MODE = sushy.BOOT_SOURCE_MODE_BIOS
 
 BOOT_IMAGE = 'http://demo.snmplabs.com/mini.iso'
 BOOT_IMAGE = 'http://10.40.205.36/mini.iso'
@@ -83,20 +84,21 @@ def main():
 
             LOG.info('inserted boot image %s into virtual media', BOOT_IMAGE)
 
+            # the caller (e.g. ironic) sets boot mode first, boot device second
+            system.set_system_boot_source(
+                BOOT_DEVICE, enabled=sushy.BOOT_SOURCE_ENABLED_CONTINUOUS,
+                mode=BOOT_MODE)
+
+            # with Dell, patching System tree does not work as expected
+            # we need to reboot for the new boot mode to take effect
+            utils.reboot_system(system)
+
+            LOG.info('set boot mode to %s', BOOT_MODE)
+
             manager_oem.set_virtual_boot_device(
                 BOOT_DEVICE, persistent=False, manager=manager, system=system)
 
             LOG.info('set boot device to %s', BOOT_DEVICE)
-
-            # NOTE(etingof): patching Systems does not work with iDRAC.
-            # We need to set BIOS BootMode attribute via configuration
-            # job, then reboot the system to take effect.
-
-#            system.set_system_boot_source(
-#                BOOT_DEVICE, enabled=sushy.BOOT_SOURCE_ENABLED_ONCE,
-#                mode=BOOT_MODE)
-
-#            LOG.info('set boot mode to %s', BOOT_MODE)
 
             # real caller should better not use our way to reboot
             utils.reboot_system(system)
