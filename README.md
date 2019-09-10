@@ -21,7 +21,9 @@ resources.
 Example use
 -----------
 
-Once installed, sushy user can access Dell EMC OEM resources:
+Once installed, sushy user can access Dell EMC OEM resources. For example,
+OEM extension of Manager resource can be instrumental for switching the
+node to boot from a virtual media device:
 
 ```python
 
@@ -30,8 +32,11 @@ import sushy
 root = sushy.Sushy('http://mydellemcbmc.example.com')
 manager = root.get_manager('iDRAC.Embedded.1')
 
-oem = manager.get_oem_extension('Dell')
+oem_manager = manager.get_oem_extension('Dell')
 
-print(oem.import_system_configuration_uri)
-
+oem_manager.set_virtual_boot_device(
+    sushy.VIRTUAL_MEDIA_CD, persistent=False, manager=manager)    
 ```
+
+See full example of virtual media boot setup in the
+[functional test suite](https://github.com/etingof/sushy-oem-dellemc/blob/master/sushy_oem_dellemc/tests/functional/vmedia_boot.py).
