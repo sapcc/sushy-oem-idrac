@@ -28,12 +28,18 @@ class ManagerTestCase(BaseTestCase):
         self.conn = mock.Mock()
         with open('sushy_oem_dellemc/tests/unit/json_samples/'
                   'manager.json') as f:
-            self.conn.get.return_value.json.return_value = json.load(f)
+            mock_response = self.conn.get.return_value;
+            mock_response.json.return_value = json.load(f)
+            mock_response.status_code = 200
+
         mock_response = self.conn.post.return_value
         mock_response.status_code = 202
+        mock_response.headers.get.return_value = '1'
+
         self.manager = manager.Manager(self.conn, '/redfish/v1/Managers/BMC',
                                        redfish_version='1.0.2')
 
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
     def test_import_system_configuration_uri(self):
         oem = self.manager.get_oem_extension('Dell')
 
@@ -42,11 +48,13 @@ class ManagerTestCase(BaseTestCase):
             '.ImportSystemConfiguration',
             oem.import_system_configuration_uri)
 
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
     def test_set_virtual_boot_device_cd(self):
         oem = self.manager.get_oem_extension('Dell')
 
-        oem.set_virtual_boot_device(sushy.VIRTUAL_MEDIA_CD)
+        oem.set_virtual_boot_device(
+            sushy.VIRTUAL_MEDIA_CD, manager=self.manager)
 
         self.conn.post.assert_called_once_with(
             '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
-            '.ImportSystemConfiguration', mock.ANY)
+            '.ImportSystemConfiguration', data=mock.ANY)

@@ -47,7 +47,7 @@ def http_call(conn, method, *args, **kwargs):
         retry_after = response.headers.get('retry-after')
         if retry_after:
             retry_after = _to_datetime(retry_after)
-            sleep_for = max(0, retry_after - datetime.now())
+            sleep_for = max(0, (retry_after - datetime.now()).total_seconds())
 
         else:
             sleep_for = 60
