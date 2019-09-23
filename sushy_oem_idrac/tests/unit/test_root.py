@@ -33,7 +33,7 @@ class RootTestCase(BaseTestCase):
         self.sess_serv.create_session.return_value = (None, None)
         mock_session_service.return_value = self.sess_serv
         mock_connector.return_value = self.conn
-        with open('sushy_oem_dellemc/tests/unit/json_samples/root.json') as f:
+        with open('sushy_oem_idrac/tests/unit/json_samples/root.json') as f:
             self.conn.get.return_value.json.return_value = json.load(f)
         self.root = main.Sushy('http://foo.bar:1234',
                                verify=True, auth=mock_auth)

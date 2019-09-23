@@ -15,23 +15,19 @@ import sys
 
 import sushy
 
-from sushy_oem_dellemc import utils
+from sushy_oem_idrac import utils
 
 USERNAME = 'root'
 PASSWORD = 'calvin'
 
 SERVICE_ROOT = 'http://demo.snmplabs.com:80/redfish/v1'
-SERVICE_ROOT = 'https://r640-u11-drac.dev1.kni.lab.eng.bos.redhat.com:443/redfish/v1'
 
 SYSTEM_ID = '437XR1138R2'
-SYSTEM_ID = 'System.Embedded.1'
 
 BOOT_DEVICE = sushy.VIRTUAL_MEDIA_CD
-#BOOT_MODE = sushy.BOOT_SOURCE_MODE_UEFI
 BOOT_MODE = sushy.BOOT_SOURCE_MODE_BIOS
 
 BOOT_IMAGE = 'http://demo.snmplabs.com/mini.iso'
-BOOT_IMAGE = 'http://10.40.205.36/mini.iso'
 
 LOG = logging.getLogger(__name__)
 
@@ -63,7 +59,8 @@ def main():
             if BOOT_DEVICE not in v_media.media_types:
                 continue
 
-            LOG.info('device %s is present at %s', BOOT_DEVICE, manager.identity)
+            LOG.info(
+                'device %s is present at %s', BOOT_DEVICE, manager.identity)
 
             try:
                 manager_oem = manager.get_oem_extension('Dell')

@@ -18,9 +18,9 @@ from sushy.resources import base
 from sushy.resources import common
 from sushy.resources.oem import base as oem_base
 
-from sushy_oem_dellemc import asynchronous
-from sushy_oem_dellemc import constants
-from sushy_oem_dellemc import utils
+from sushy_oem_idrac import asynchronous
+from sushy_oem_idrac import constants
+from sushy_oem_idrac import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -108,7 +108,7 @@ VFDD\
 
         action_data = dict(self.ACTION_DATA, ImportBuffer=idrac_media)
 
-        # TODO (etingof): figure out if on-time or persistent boot can at
+        # TODO(etingof): figure out if on-time or persistent boot can at
         # all be implemented via this OEM call
 
         attempts = 10

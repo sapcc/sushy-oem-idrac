@@ -11,7 +11,7 @@ introduce their own features with the common Redfish framework. At the same
 time, `sushy` supports extending its data model by loading extensions found
 within its "oem" namespace.
 
-The `sushy-oem-dellemc` package is a sushy extension package that aims at
+The `sushy-oem-idrac` package is a sushy extension package that aims at
 adding high-level hardware management abstractions, that are specific to
 Dell EMC BMC (which is known under the name of iDRAC), to the tree of sushy
 Redfish resources.
@@ -37,4 +37,4 @@ oem_manager.set_virtual_boot_device(
 ```
 
 See full example of virtual media boot setup in the
-[functional test suite](https://github.com/etingof/sushy-oem-dellemc/blob/master/sushy_oem_dellemc/tests/functional/vmedia_boot.py).
+[functional test suite](https://github.com/etingof/sushy-oem-idrac/blob/master/sushy_oem_idrac/tests/functional/vmedia_boot.py).

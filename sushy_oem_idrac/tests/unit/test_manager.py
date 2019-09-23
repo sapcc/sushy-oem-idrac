@@ -26,9 +26,9 @@ class ManagerTestCase(BaseTestCase):
     def setUp(self):
         super(ManagerTestCase, self).setUp()
         self.conn = mock.Mock()
-        with open('sushy_oem_dellemc/tests/unit/json_samples/'
+        with open('sushy_oem_idrac/tests/unit/json_samples/'
                   'manager.json') as f:
-            mock_response = self.conn.get.return_value;
+            mock_response = self.conn.get.return_value
             mock_response.json.return_value = json.load(f)
             mock_response.status_code = 200
 
