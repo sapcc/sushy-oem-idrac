@@ -76,6 +76,9 @@ VFDD\
         sushy.VIRTUAL_MEDIA_CD: IDRAC_CONFIG_CD
     }
 
+    RETRY_COUNT = 10
+    RETRY_DELAY = 15
+
     @property
     def import_system_configuration_uri(self):
         return self._actions.import_system_configuration.target_uri
@@ -111,7 +114,7 @@ VFDD\
         # TODO(etingof): figure out if on-time or persistent boot can at
         # all be implemented via this OEM call
 
-        attempts = 10
+        attempts = self.RETRY_COUNT
         rebooted = False
 
         while True:
@@ -155,10 +158,11 @@ VFDD\
                         pass
 
                 else:
-                    time.sleep(60)
+                    time.sleep(self.RETRY_DELAY)
 
                 if not attempts:
-                    LOG.error('Too many retries, bailing out.')
+                    LOG.error('Too many (%d) retries, bailing '
+                              'out.', self.RETRY_COUNT)
                     raise
 
                 attempts -= 1

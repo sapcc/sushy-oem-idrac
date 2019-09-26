@@ -20,6 +20,8 @@ import sushy
 
 LOG = logging.getLogger(__name__)
 
+TASK_POLL_PERIOD = 15
+
 
 def _to_datetime(retry_after_str):
     if retry_after_str.isdigit():
@@ -50,7 +52,10 @@ def http_call(conn, method, *args, **kwargs):
             sleep_for = max(0, (retry_after - datetime.now()).total_seconds())
 
         else:
-            sleep_for = 60
+            sleep_for = TASK_POLL_PERIOD
+
+        LOG.info('Sleeping for %d secs before retrying HTTP GET '
+                 '%s', sleep_for, location)
 
         time.sleep(sleep_for)
 
