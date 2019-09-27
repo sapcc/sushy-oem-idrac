@@ -56,8 +56,8 @@ def http_call(conn, method, *args, **kwargs):
             retry_after = _to_datetime(retry_after)
             sleep_for = max(0, (retry_after - datetime.now()).total_seconds())
 
-        LOG.info('Sleeping for %d secs before retrying HTTP GET '
-                 '%s', sleep_for, location)
+        LOG.debug('Sleeping for %d secs before retrying HTTP GET '
+                  '%s', sleep_for, location)
 
         time.sleep(sleep_for)
 

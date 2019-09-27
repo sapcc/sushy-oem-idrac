@@ -126,7 +126,9 @@ VFDD\
                     sushy_task_poll_period=1)
 
                 LOG.info("Set boot device to %(device)s via "
-                         "Dell OEM magic spell", {'device': device})
+                         "Dell OEM magic spell (%(retries)d "
+                         "retries)", {'device': device,
+                                      'retries': self.RETRY_COUNT - attempts})
 
                 return response
 
