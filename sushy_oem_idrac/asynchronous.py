@@ -39,6 +39,9 @@ def http_call(conn, method, *args, **kwargs):
 
     response = handle(*args, **kwargs)
 
+    LOG.debug('Finished HTTP %s with args %s %s, response is '
+              '%d', method, args or '', kwargs, response.status_code)
+
     while response.status_code == 202:
         location = response.headers.get('location')
         if not location:
@@ -59,6 +62,9 @@ def http_call(conn, method, *args, **kwargs):
         time.sleep(sleep_for)
 
         response = conn.get(location)
+
+        LOG.debug('Finished HTTP GET %s, response is '
+                  '%d', location, response.status_code)
 
     if response.status_code >= 400:
         raise sushy.exceptions.ExtensionError(
