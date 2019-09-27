@@ -122,7 +122,8 @@ VFDD\
                 response = asynchronous.http_call(
                     self._conn, 'post',
                     self.import_system_configuration_uri,
-                    data=action_data)
+                    data=action_data,
+                    sushy_task_poll_period=1)
 
                 LOG.info("Set boot device to %(device)s via "
                          "Dell OEM magic spell", {'device': device})
