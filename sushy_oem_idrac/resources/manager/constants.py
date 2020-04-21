@@ -28,3 +28,12 @@ EXPORT_NIC_CONFIG = 'NIC'
 
 EXPORT_RAID_CONFIG = 'RAID'
 """Export RAID related configuration"""
+
+# iDRAC Reset action constants
+
+
+RESET_IDRAC_GRACEFUL_RESTART = 'graceful restart'
+"""Perform a graceful shutdown followed by a restart of the system"""
+
+RESET_IDRAC_FORCE_RESTART = 'force restart'
+"""Perform an immediate (non-graceful) shutdown, followed by a restart"""

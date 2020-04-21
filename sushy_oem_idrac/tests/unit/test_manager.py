@@ -22,6 +22,10 @@ import sushy
 from sushy.resources.manager import manager
 
 from sushy_oem_idrac.resources.manager import constants as mgr_cons
+from sushy_oem_idrac.resources.manager import idrac_card_service as idrac_card
+from sushy_oem_idrac.resources.manager import job_collection as jc
+from sushy_oem_idrac.resources.manager import job_service as job
+from sushy_oem_idrac.resources.manager import lifecycle_service as lifecycle
 
 
 class ManagerTestCase(BaseTestCase):
@@ -152,3 +156,62 @@ class ManagerTestCase(BaseTestCase):
 
         self.assertRaises(sushy.exceptions.ExtensionError,
                           oem.get_pxe_port_macs_bios, ethernet_interfaces_mac)
+
+    def test_idrac_card_service(self):
+        oem = self.manager.get_oem_extension('Dell')
+        with open('sushy_oem_idrac/tests/unit/json_samples/'
+                  'idrac_card_service.json') as f:
+            mock_response = self.conn.get.return_value
+            mock_response.json.return_value = json.load(f)
+            mock_response.status_code = 200
+        idrac_card_service = oem.idrac_card_service
+        self.assertEqual(
+            '/redfish/v1/Dell/Managers/iDRAC.Embedded.1/DelliDRACCardService',
+            idrac_card_service.path)
+        self.assertIsInstance(idrac_card_service,
+                              idrac_card.DelliDRACCardService)
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test_lifecycle_service(self):
+        oem = self.manager.get_oem_extension('Dell')
+        with open('sushy_oem_idrac/tests/unit/json_samples/'
+                  'lifecycle_service.json') as f:
+            mock_response = self.conn.get.return_value
+            mock_response.json.return_value = json.load(f)
+            mock_response.status_code = 200
+        lifecycle_service = oem.lifecycle_service
+        self.assertEqual(
+            '/redfish/v1/Dell/Managers/iDRAC.Embedded.1/DellLCService',
+            lifecycle_service.path)
+        self.assertIsInstance(lifecycle_service,
+                              lifecycle.DellLCService)
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test_job_service(self):
+        oem = self.manager.get_oem_extension('Dell')
+        with open('sushy_oem_idrac/tests/unit/json_samples/'
+                  'job_service.json') as f:
+            mock_response = self.conn.get.return_value
+            mock_response.json.return_value = json.load(f)
+            mock_response.status_code = 200
+        job_service = oem.job_service
+        self.assertEqual(
+            '/redfish/v1/Dell/Managers/iDRAC.Embedded.1/DellJobService',
+            job_service.path)
+        self.assertIsInstance(job_service,
+                              job.DellJobService)
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test_job_collection(self):
+        oem = self.manager.get_oem_extension('Dell')
+        with open('sushy_oem_idrac/tests/unit/json_samples/'
+                  'job_collection_expanded.json') as f:
+            mock_response = self.conn.get.return_value
+            mock_response.json.return_value = json.load(f)
+            mock_response.status_code = 200
+        job_collection = oem.job_collection
+        self.assertEqual(
+            '/redfish/v1/Managers/iDRAC.Embedded.1/Jobs',
+            job_collection.path)
+        self.assertIsInstance(job_collection,
+                              jc.DellJobCollection)

@@ -19,11 +19,16 @@ import sushy
 from sushy.resources import base
 from sushy.resources import common
 from sushy.resources.oem import base as oem_base
+from sushy import utils as sushy_utils
 
 from sushy_oem_idrac import asynchronous
 from sushy_oem_idrac import constants
 from sushy_oem_idrac.resources import common as res_common
 from sushy_oem_idrac.resources.manager import constants as mgr_cons
+from sushy_oem_idrac.resources.manager import idrac_card_service
+from sushy_oem_idrac.resources.manager import job_collection
+from sushy_oem_idrac.resources.manager import job_service
+from sushy_oem_idrac.resources.manager import lifecycle_service
 from sushy_oem_idrac.resources.manager import mappings as mgr_maps
 from sushy_oem_idrac import utils
 
@@ -101,6 +106,57 @@ VFDD\
     @property
     def export_system_configuration_uri(self):
         return self._actions.export_system_configuration.target_uri
+
+    @property
+    @sushy_utils.cache_it
+    def idrac_card_service(self):
+        """Property to reference `DelliDRACCardService` instance of this manager.
+
+        """
+        path = sushy_utils.get_sub_resource_path_by(
+            self, ["Links", "Oem", "Dell", "DelliDRACCardService"],
+            is_collection=False)
+
+        return idrac_card_service.DelliDRACCardService(
+            self._conn, path, self.redfish_version, self.registries)
+
+    @property
+    @sushy_utils.cache_it
+    def lifecycle_service(self):
+        """Property to reference `DellLCService` instance of this manager.
+
+        """
+        path = sushy_utils.get_sub_resource_path_by(
+            self, ["Links", "Oem", "Dell", "DellLCService"],
+            is_collection=False)
+
+        return lifecycle_service.DellLCService(
+            self._conn, path, self.redfish_version, self.registries)
+
+    @property
+    @sushy_utils.cache_it
+    def job_service(self):
+        """Property to reference `DellJobService` instance of this manager.
+
+        """
+        path = sushy_utils.get_sub_resource_path_by(
+            self, ["Links", "Oem", "Dell", "DellJobService"],
+            is_collection=False)
+
+        return job_service.DellJobService(
+            self._conn, path, self.redfish_version, self.registries)
+
+    @property
+    @sushy_utils.cache_it
+    def job_collection(self):
+        """Property to reference `DellJobService` instance of this manager.
+
+        """
+        path = sushy_utils.get_sub_resource_path_by(
+            self, ["Links", "Oem", "Dell", "Jobs"], is_collection=False)
+
+        return job_collection.DellJobCollection(
+            self._conn, path, self.redfish_version, self.registries)
 
     def set_virtual_boot_device(self, device, persistent=False,
                                 manager=None, system=None):
