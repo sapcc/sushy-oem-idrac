@@ -14,8 +14,8 @@
 #    under the License.
 
 import json
-import mock
 
+import mock
 from oslotest.base import BaseTestCase
 import sushy
 from sushy.resources.manager import manager
