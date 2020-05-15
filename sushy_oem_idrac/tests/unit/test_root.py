@@ -14,8 +14,8 @@
 #    under the License.
 
 import json
+from unittest import mock
 
-import mock
 from oslotest.base import BaseTestCase
 from sushy import main
 
