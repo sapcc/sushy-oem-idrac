@@ -42,8 +42,9 @@ def http_call(conn, method, *args, **kwargs):
     LOG.debug('Finished HTTP %s with args %s %s, response is '
               '%d', method, args or '', kwargs, response.status_code)
 
+    location = None
     while response.status_code == 202:
-        location = response.headers.get('location')
+        location = response.headers.get('location', location)
         if not location:
             raise sushy.exceptions.ExtensionError(
                 error='Response %d to HTTP %s with args %s, kwargs %s '
