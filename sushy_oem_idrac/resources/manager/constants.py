@@ -58,3 +58,56 @@ IMPORT_SHUTDOWN_NO_REBOOT = 'no shutdown'
 
 No shutdown performed. Explicit reboot is necessary to apply changes.
 """
+
+# ExportUse in ExportSystemConfiguration
+EXPORT_USE_DEFAULT = 'Default'
+"""Default export type
+
+Leaves some attributes commented out and requires user to enable them before
+they can be applied during import.
+"""
+
+EXPORT_USE_CLONE = 'Clone'
+"""Clone export type suitable for cloning a 'golden' configuration.
+
+Compared to Default export type, more attributes are enabled and
+storage settings adjusted to aid in cloning process.
+"""
+
+EXPORT_USE_REPLACE = 'Replace'
+"""Replace export type suited for retiring or replacing complete configuration.
+
+Compared to Clone export type, most attributes are enabled and storage settings
+adjusted to aid in the replace process.
+"""
+
+# IncludeInExport in ExportSystemConfiguration
+INCLUDE_EXPORT_DEFAULT = 'Default'
+"""Default for what to include in export.
+
+Does not include read-only attributes, and depending on Export Use, passwords
+are marked as ****** (for Default) or are set to default password values (for
+Clone and Replace).
+"""
+
+INCLUDE_EXPORT_READ_ONLY = 'Include read only attributes'
+"""Includes read-only attributes.
+
+In addition to values included by Default option, this also includes read-only
+attributes that cannot be changed via Import and are provided for informational
+purposes only.
+"""
+
+INCLUDE_EXPORT_PASSWORD_HASHES = 'Include password hash values'
+"""Include password hashes.
+
+When using Clone or Replace, include password hashes, instead of default
+password. Can be used to replicate passwords across systems.
+"""
+
+INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES = ('Include read only attributes and '
+                                            'password hash values')
+"""Includes both read-only attributes and password hashes.
+
+INCLUDE_EXPORT_READ_ONLY and INCLUDE_EXPORT_PASSWORD_HASHES combined
+"""

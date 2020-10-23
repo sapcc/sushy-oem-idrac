@@ -41,3 +41,23 @@ IMPORT_SHUTDOWN_VALUE_MAP = {
 
 IMPORT_SHUTDOWN_VALUE_MAP_REV =\
     utils.revert_dictionary(IMPORT_SHUTDOWN_VALUE_MAP)
+
+EXPORT_USE_VALUE_MAP = {
+    'Default': mgr_cons.EXPORT_USE_DEFAULT,
+    'Clone': mgr_cons.EXPORT_USE_CLONE,
+    'Replace': mgr_cons.EXPORT_USE_REPLACE
+}
+
+EXPORT_USE_VALUE_MAP_REV = utils.revert_dictionary(EXPORT_USE_VALUE_MAP)
+
+INCLUDE_EXPORT_VALUE_MAP = {
+    'Default': mgr_cons.INCLUDE_EXPORT_DEFAULT,
+    'IncludeReadOnly': mgr_cons.INCLUDE_EXPORT_READ_ONLY,
+    'IncludePasswordHashValues':
+        mgr_cons.INCLUDE_EXPORT_PASSWORD_HASHES,
+    'IncludeReadOnly,IncludePasswordHashValues':
+        mgr_cons.INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES
+}
+
+INCLUDE_EXPORT_VALUE_MAP_REV =\
+    utils.revert_dictionary(INCLUDE_EXPORT_VALUE_MAP)

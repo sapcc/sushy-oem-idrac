@@ -47,6 +47,10 @@ class SharedParameters(base.CompositeField):
 
 class ExportActionField(common.ActionField):
     shared_parameters = SharedParameters('ShareParameters')
+    allowed_export_use_values = base.Field(
+        'ExportUse@Redfish.AllowableValues', adapter=list)
+    allowed_include_in_export_values = base.Field(
+        'IncludeInExport@Redfish.AllowableValues', adapter=list)
 
 
 class ImportActionField(common.ActionField):
@@ -270,18 +274,60 @@ VFDD\
                     set(mgr_maps.EXPORT_CONFIG_VALUE_MAP).
                     intersection(allowed_values)])
 
-    def _export_system_configuration(self, target):
+    def get_allowed_export_use_values(self):
+        """Get allowed export use values of export system configuration.
+
+        :returns: A set of allowed export use values.
+        """
+        export_action = self._actions.export_system_configuration
+        allowed_values = export_action.allowed_export_use_values
+
+        if not allowed_values:
+            LOG.warning('Could not figure out the allowed values for the '
+                        'export use of export system configuration at %s',
+                        self.path)
+            return set(mgr_maps.EXPORT_USE_VALUE_MAP_REV)
+
+        return set([mgr_maps.EXPORT_USE_VALUE_MAP[value] for value in
+                    set(mgr_maps.EXPORT_USE_VALUE_MAP).
+                    intersection(allowed_values)])
+
+    def get_allowed_include_in_export_values(self):
+        """Get allowed include in export values of export system configuration.
+
+        :returns: A set of allowed include in export values.
+        """
+        export_action = self._actions.export_system_configuration
+        allowed_values = export_action.allowed_include_in_export_values
+
+        if not allowed_values:
+            LOG.warning('Could not figure out the allowed values for the '
+                        'include in export of export system configuration at '
+                        '%s', self.path)
+            return set(mgr_maps.INCLUDE_EXPORT_VALUE_MAP_REV)
+
+        return set([mgr_maps.INCLUDE_EXPORT_VALUE_MAP[value] for value
+                   in set(mgr_maps.INCLUDE_EXPORT_VALUE_MAP).
+                   intersection(allowed_values)])
+
+    def _export_system_configuration(
+        self, target, export_use=mgr_cons.EXPORT_USE_DEFAULT,
+        include_in_export=mgr_cons.INCLUDE_EXPORT_DEFAULT):
         """Export system configuration.
 
-        It exports system configuration for specified target
-        like NIC, BIOS, RAID.
+        It exports system configuration for specified target like NIC, BIOS,
+        RAID and allows to configure purpose for export and what to include.
 
         :param target: Component of the system to export the
             configuration from. Can be the entire system.
             Valid values can be gotten from
-            `get_allowed_export_target_values`.
-        :returns: a response object containing configuration details for
-            the specified target.
+            `get_allowed_export_system_config_values`.
+        :param export_use: Export use. Optional, defaults to "Default".
+            Valid values can be gotten from `get_allowed_export_use_values`.
+        :param include_in_export: What to include in export. Optional. Defaults
+            to "Default". Valid values can be gotten from
+            `get_allowed_include_in_export_values`.
+        :returns: Response object containing configuration details.
         :raises: InvalidParameterValueError on invalid target.
         :raises: ExtensionError on failure to perform requested
             operation
@@ -292,13 +338,30 @@ VFDD\
                 parameter='target', value=target,
                 valid_values=valid_allowed_targets)
 
+        allowed_export_use = self.get_allowed_export_use_values()
+        if export_use not in allowed_export_use:
+            raise sushy.exceptions.InvalidParameterValueError(
+                parameter='export_use', value=export_use,
+                valid_values=allowed_export_use)
+
+        allowed_include_in_export = self.get_allowed_include_in_export_values()
+        if include_in_export not in allowed_include_in_export:
+            raise sushy.exceptions.InvalidParameterValueError(
+                parameter='include_in_export', value=include_in_export,
+                valid_values=allowed_include_in_export)
+
         target = mgr_maps.EXPORT_CONFIG_VALUE_MAP_REV[target]
+        export_use = mgr_maps.EXPORT_USE_VALUE_MAP_REV[export_use]
+        include_in_export =\
+            mgr_maps.INCLUDE_EXPORT_VALUE_MAP_REV[include_in_export]
 
         action_data = {
             'ShareParameters': {
                 'Target': target
             },
-            'ExportFormat': "JSON"
+            'ExportFormat': "JSON",
+            'ExportUse': export_use,
+            'IncludeInExport': include_in_export
         }
 
         try:
@@ -317,6 +380,21 @@ VFDD\
                 sushy.exceptions.InvalidParameterValueError) as exc:
             LOG.error('Dell OEM export system configuration failed : %s', exc)
             raise
+
+    def export_system_configuration(self):
+        """Export system configuration.
+
+        Exports ALL targets for cloning and includes password hashes.
+
+        :returns: Response object containing configuration details.
+        :raises: InvalidParameterValueError on invalid target.
+        :raises: ExtensionError on failure to perform requested
+            operation
+        """
+        return self._export_system_configuration(
+            mgr_cons.EXPORT_TARGET_ALL,
+            export_use=mgr_cons.EXPORT_USE_CLONE,
+            include_in_export=mgr_cons.INCLUDE_EXPORT_PASSWORD_HASHES)
 
     def get_pxe_port_macs_bios(self, ethernet_interfaces_mac):
         """Get a list of pxe port MAC addresses for BIOS.

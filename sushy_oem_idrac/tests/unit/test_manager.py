@@ -100,7 +100,26 @@ class ManagerTestCase(BaseTestCase):
             '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
             '.ExportSystemConfiguration', data={'ShareParameters':
                                                 {'Target': 'ALL'},
-                                                'ExportFormat': 'JSON'})
+                                                'ExportFormat': 'JSON',
+                                                'ExportUse': 'Default',
+                                                'IncludeInExport': 'Default'})
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test__export_system_configuration_nondefault(self):
+        oem = self.manager.get_oem_extension('Dell')
+        oem._export_system_configuration(
+            target=mgr_cons.EXPORT_TARGET_RAID,
+            export_use=mgr_cons.EXPORT_USE_CLONE,
+            include_in_export=mgr_cons.INCLUDE_EXPORT_READ_ONLY)
+
+        self.conn.post.assert_called_once_with(
+            '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
+            '.ExportSystemConfiguration', data={'ShareParameters':
+                                                {'Target': 'RAID'},
+                                                'ExportFormat': 'JSON',
+                                                'ExportUse': 'Clone',
+                                                'IncludeInExport':
+                                                    'IncludeReadOnly'})
 
     @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
     def test__export_system_configuration_invalid_target(self):
@@ -108,6 +127,87 @@ class ManagerTestCase(BaseTestCase):
         target = "xyz"
         self.assertRaises(sushy.exceptions.InvalidParameterValueError,
                           oem._export_system_configuration, target)
+
+    def test__export_system_configuration_invalid_export_use(self):
+        oem = self.manager.get_oem_extension('Dell')
+        self.assertRaises(sushy.exceptions.InvalidParameterValueError,
+                          oem._export_system_configuration, "RAID",
+                          export_use="ABC")
+
+    def test__export_system_configuration_invalid_include_in_export(self):
+        oem = self.manager.get_oem_extension('Dell')
+        self.assertRaises(sushy.exceptions.InvalidParameterValueError,
+                          oem._export_system_configuration, "RAID",
+                          include_in_export="ABC")
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test_get_allowed_export_use_values(self):
+        oem = self.manager.get_oem_extension('Dell')
+        expected_values = {mgr_cons.EXPORT_USE_DEFAULT,
+                           mgr_cons.EXPORT_USE_CLONE,
+                           mgr_cons.EXPORT_USE_REPLACE}
+        allowed_values = oem.get_allowed_export_use_values()
+        self.assertIsInstance(allowed_values, set)
+        self.assertEqual(expected_values, allowed_values)
+
+    @mock.patch.object(oem_manager, 'LOG', autospec=True)
+    def test_get_allowed_export_use_values_missing(self, mock_log):
+        oem = self.manager.get_oem_extension('Dell')
+        export_action = ('OemManager.v1_0_0'
+                         '#OemManager.ExportSystemConfiguration')
+        oem.json['Actions']['Oem'][export_action].pop(
+            'ExportUse@Redfish.AllowableValues')
+        oem.refresh()
+        expected_values = {mgr_cons.EXPORT_USE_DEFAULT,
+                           mgr_cons.EXPORT_USE_CLONE,
+                           mgr_cons.EXPORT_USE_REPLACE}
+        allowed_values = oem.get_allowed_export_use_values()
+        self.assertIsInstance(allowed_values, set)
+        self.assertEqual(expected_values, allowed_values)
+        mock_log.warning.assert_called_once()
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test_get_allowed_include_in_export_values(self):
+        oem = self.manager.get_oem_extension('Dell')
+        expected_values = {mgr_cons.INCLUDE_EXPORT_DEFAULT,
+                           mgr_cons.INCLUDE_EXPORT_READ_ONLY,
+                           mgr_cons.INCLUDE_EXPORT_PASSWORD_HASHES,
+                           mgr_cons.INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES}
+        allowed_values = oem.get_allowed_include_in_export_values()
+        self.assertIsInstance(allowed_values, set)
+        self.assertEqual(expected_values, allowed_values)
+
+    @mock.patch.object(oem_manager, 'LOG', autospec=True)
+    def test_get_allowed_include_in_export_values_missing(self, mock_log):
+        oem = self.manager.get_oem_extension('Dell')
+        export_action = ('OemManager.v1_0_0'
+                         '#OemManager.ExportSystemConfiguration')
+        oem.json['Actions']['Oem'][export_action].pop(
+            'IncludeInExport@Redfish.AllowableValues')
+        oem.refresh()
+        expected_values = {mgr_cons.INCLUDE_EXPORT_DEFAULT,
+                           mgr_cons.INCLUDE_EXPORT_READ_ONLY,
+                           mgr_cons.INCLUDE_EXPORT_PASSWORD_HASHES,
+                           mgr_cons.INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES}
+        allowed_values = oem.get_allowed_include_in_export_values()
+        self.assertIsInstance(allowed_values, set)
+        self.assertEqual(expected_values, allowed_values)
+        mock_log.warning.assert_called_once()
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test_export_system_configuration(self):
+        oem = self.manager.get_oem_extension('Dell')
+        oem._export_system_configuration = mock.Mock()
+        mock_response = mock.Mock()
+        oem._export_system_configuration.return_value = mock_response
+
+        response = oem.export_system_configuration()
+
+        self.assertEqual(mock_response, response)
+        oem._export_system_configuration.assert_called_once_with(
+            mgr_cons.EXPORT_TARGET_ALL,
+            export_use=mgr_cons.EXPORT_USE_CLONE,
+            include_in_export=mgr_cons.INCLUDE_EXPORT_PASSWORD_HASHES)
 
     @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
     def test_get_pxe_port_macs_bios(self):
