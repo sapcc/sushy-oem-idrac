@@ -19,6 +19,7 @@ import sushy
 from sushy.resources import base
 from sushy.resources import common
 from sushy.resources.oem import base as oem_base
+from sushy.taskmonitor import TaskMonitor
 from sushy import utils as sushy_utils
 
 from sushy_oem_idrac import asynchronous
@@ -48,8 +49,13 @@ class ExportActionField(common.ActionField):
     shared_parameters = SharedParameters('ShareParameters')
 
 
+class ImportActionField(common.ActionField):
+    allowed_shutdown_type_values = base.Field(
+        'ShutdownType@Redfish.AllowableValues', adapter=list)
+
+
 class DellManagerActionsField(base.CompositeField):
-    import_system_configuration = common.ActionField(
+    import_system_configuration = ImportActionField(
         lambda key, **kwargs: key.endswith(
             '#OemManager.ImportSystemConfiguration'))
 
@@ -349,6 +355,52 @@ VFDD\
             error = (('Failed to get system configuration from response'))
             LOG.error(error)
             raise sushy.exceptions.ExtensionError(error=error)
+
+    def get_allowed_import_shutdown_type_values(self):
+        """Get the allowed shutdown types of import system configuration.
+
+        :returns: A set of allowed shutdown type values.
+        """
+        import_action = self._actions.import_system_configuration
+        allowed_values = import_action.allowed_shutdown_type_values
+
+        if not allowed_values:
+            LOG.warning('Could not figure out the allowed values for the '
+                        'shutdown type of import system configuration at %s',
+                        self.path)
+            return set(mgr_maps.IMPORT_SHUTDOWN_VALUE_MAP_REV)
+
+        return set([mgr_maps.IMPORT_SHUTDOWN_VALUE_MAP[value] for value in
+                    set(mgr_maps.IMPORT_SHUTDOWN_VALUE_MAP).
+                    intersection(allowed_values)])
+
+    def import_system_configuration(self, import_buffer):
+        """Imports system configuration.
+
+        Caller needs to handle system reboot separately.
+
+        :param import_buffer: Configuration data to be imported.
+        :returns: Task monitor instance to watch for task completion
+        """
+        action_data = dict(self.ACTION_DATA, ImportBuffer=import_buffer)
+        # Caller needs to handle system reboot separately to preserve
+        # one-time boot settings.
+        shutdown_type = mgr_cons.IMPORT_SHUTDOWN_NO_REBOOT
+
+        allowed_shutdown_types = self.get_allowed_import_shutdown_type_values()
+        if shutdown_type not in allowed_shutdown_types:
+            raise sushy.exceptions.InvalidParameterValueError(
+                parameter='shutdown_type', value=shutdown_type,
+                valid_values=allowed_shutdown_types)
+
+        action_data['ShutdownType'] =\
+            mgr_maps.IMPORT_SHUTDOWN_VALUE_MAP_REV[shutdown_type]
+
+        response = self._conn.post(self.import_system_configuration_uri,
+                                   data=action_data)
+
+        return TaskMonitor.from_response(
+            self._conn, response, self.import_system_configuration_uri)
 
 
 def get_extension(*args, **kwargs):

@@ -44,7 +44,7 @@ def http_call(conn, method, *args, **kwargs):
 
     location = None
     while response.status_code == 202:
-        location = response.headers.get('location', location)
+        location = response.headers.get('Location', location)
         if not location:
             raise sushy.exceptions.ExtensionError(
                 error='Response %d to HTTP %s with args %s, kwargs %s '
@@ -52,7 +52,7 @@ def http_call(conn, method, *args, **kwargs):
                       'header' % (response.status_code, method.upper(),
                                   args, kwargs))
 
-        retry_after = response.headers.get('retry-after')
+        retry_after = response.headers.get('Retry-After')
         if retry_after:
             retry_after = _to_datetime(retry_after)
             sleep_for = max(0, (retry_after - datetime.now()).total_seconds())

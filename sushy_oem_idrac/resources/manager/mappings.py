@@ -32,3 +32,12 @@ RESET_IDRAC_VALUE_MAP = {
 }
 
 RESET_IDRAC_VALUE_MAP_REV = utils.revert_dictionary(RESET_IDRAC_VALUE_MAP)
+
+IMPORT_SHUTDOWN_VALUE_MAP = {
+    'Graceful': mgr_cons.IMPORT_SHUTDOWN_GRACEFUL,
+    'Forced': mgr_cons.IMPORT_SHUTDOWN_FORCED,
+    'NoReboot': mgr_cons.IMPORT_SHUTDOWN_NO_REBOOT
+}
+
+IMPORT_SHUTDOWN_VALUE_MAP_REV =\
+    utils.revert_dictionary(IMPORT_SHUTDOWN_VALUE_MAP)

@@ -37,3 +37,24 @@ RESET_IDRAC_GRACEFUL_RESTART = 'graceful restart'
 
 RESET_IDRAC_FORCE_RESTART = 'force restart'
 """Perform an immediate (non-graceful) shutdown, followed by a restart"""
+
+# ImportSystemConfiguration ShutdownType values
+IMPORT_SHUTDOWN_GRACEFUL = 'graceful shutdown'
+"""Graceful shutdown for Import System Configuration
+
+Will wait for the host up to 5 minutes to shut down before timing out. The
+operating system can potentially deny or ignore the graceful shutdown request.
+"""
+
+IMPORT_SHUTDOWN_FORCED = 'forced shutdown'
+"""Forced shutdown for Import System Configuration
+
+The host server will be powered off immediately. Should be used when it is safe
+to power down the host.
+"""
+
+IMPORT_SHUTDOWN_NO_REBOOT = 'no shutdown'
+"""No reboot for Import System Configuration
+
+No shutdown performed. Explicit reboot is necessary to apply changes.
+"""

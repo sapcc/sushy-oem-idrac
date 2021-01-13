@@ -20,12 +20,14 @@ from unittest import mock
 from oslotest.base import BaseTestCase
 import sushy
 from sushy.resources.manager import manager
+from sushy.taskmonitor import TaskMonitor
 
 from sushy_oem_idrac.resources.manager import constants as mgr_cons
 from sushy_oem_idrac.resources.manager import idrac_card_service as idrac_card
 from sushy_oem_idrac.resources.manager import job_collection as jc
 from sushy_oem_idrac.resources.manager import job_service as job
 from sushy_oem_idrac.resources.manager import lifecycle_service as lifecycle
+from sushy_oem_idrac.resources.manager import manager as oem_manager
 
 
 class ManagerTestCase(BaseTestCase):
@@ -41,7 +43,9 @@ class ManagerTestCase(BaseTestCase):
 
         mock_response = self.conn.post.return_value
         mock_response.status_code = 202
-        mock_response.headers.get.return_value = '1'
+        mock_response.headers = {
+            'Location': '/redfish/v1/TaskService/Tasks/JID_905749031119'}
+        mock_response.content = None
 
         self.manager = manager.Manager(self.conn, '/redfish/v1/Managers/BMC',
                                        redfish_version='1.0.2')
@@ -215,3 +219,44 @@ class ManagerTestCase(BaseTestCase):
             job_collection.path)
         self.assertIsInstance(job_collection,
                               jc.DellJobCollection)
+
+    def test_get_allowed_import_shutdown_type_values(self):
+        oem = self.manager.get_oem_extension('Dell')
+        expected_values = {mgr_cons.IMPORT_SHUTDOWN_GRACEFUL,
+                           mgr_cons.IMPORT_SHUTDOWN_FORCED,
+                           mgr_cons.IMPORT_SHUTDOWN_NO_REBOOT}
+        allowed_values = oem.get_allowed_import_shutdown_type_values()
+        self.assertIsInstance(allowed_values, set)
+        self.assertEqual(expected_values, allowed_values)
+
+    @mock.patch.object(oem_manager, 'LOG', autospec=True)
+    def test_get_allowed_import_shutdown_type_values_missing(self, mock_log):
+        oem = self.manager.get_oem_extension('Dell')
+        import_action = ('OemManager.v1_0_0'
+                         '#OemManager.ImportSystemConfiguration')
+        oem.json['Actions']['Oem'][import_action].pop(
+            'ShutdownType@Redfish.AllowableValues')
+        oem.refresh()
+        expected_values = {mgr_cons.IMPORT_SHUTDOWN_GRACEFUL,
+                           mgr_cons.IMPORT_SHUTDOWN_FORCED,
+                           mgr_cons.IMPORT_SHUTDOWN_NO_REBOOT}
+        allowed_values = oem.get_allowed_import_shutdown_type_values()
+        self.assertIsInstance(allowed_values, set)
+        self.assertEqual(expected_values, allowed_values)
+        mock_log.warning.assert_called_once()
+
+    def test_import_system_configuration(self):
+        oem = self.manager.get_oem_extension('Dell')
+
+        result = oem.import_system_configuration('{"key": "value"}')
+
+        self.conn.post.assert_called_once_with(
+            '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
+            '.ImportSystemConfiguration', data={'ShareParameters':
+                                                {'Target': 'ALL'},
+                                                'ImportBuffer':
+                                                '{"key": "value"}',
+                                                'ShutdownType': 'NoReboot'})
+        self.assertIsInstance(result, TaskMonitor)
+        self.assertEqual('/redfish/v1/TaskService/Tasks/JID_905749031119',
+                         result.task_monitor_uri)

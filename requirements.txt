@@ -4,4 +4,4 @@
 
 pbr!=2.1.0,>=2.0.0 # Apache-2.0
 python-dateutil>=2.7.0 # BSD
-sushy>=2.0.0 # Apache-2.0
+sushy>=3.7.0 # Apache-2.0
