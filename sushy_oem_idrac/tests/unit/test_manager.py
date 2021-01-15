@@ -100,3 +100,55 @@ class ManagerTestCase(BaseTestCase):
         target = "xyz"
         self.assertRaises(sushy.exceptions.InvalidParameterValueError,
                           oem._export_system_configuration, target)
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test_get_pxe_port_macs_bios(self):
+        oem = self.manager.get_oem_extension('Dell')
+        oem._export_system_configuration = mock.Mock()
+        with open('sushy_oem_idrac/tests/unit/json_samples/'
+                  'export_configuration_nic_bios.json') as f:
+            mock_response = oem._export_system_configuration.return_value
+            mock_response.json.return_value = json.load(f)
+            mock_response.status_code = 200
+        ethernet_interfaces_mac = {'NIC.Integrated.1-4-1': '68:05:CA:AF:AA:C9',
+                                   'NIC.Slot.7-2-1': '3C:FD:FE:CD:67:31',
+                                   'NIC.Slot.7-1-1': '3C:FD:FE:CD:67:30',
+                                   'NIC.Integrated.1-2-1': '68:05:CA:AF:AA:C7',
+                                   'NIC.Integrated.1-3-1': '68:05:CA:AF:AA:C8',
+                                   'NIC.Integrated.1-1-1': '68:05:CA:AF:AA:C6'}
+
+        self.assertEqual(["68:05:CA:AF:AA:C8"],
+                         oem.get_pxe_port_macs_bios(ethernet_interfaces_mac))
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test_get_pxe_port_macs_bios_invalid_system_config_tag(self):
+        oem = self.manager.get_oem_extension('Dell')
+        oem._export_system_configuration = mock.Mock()
+        mock_response = oem._export_system_configuration.return_value
+        mock_response.json.return_value = {'Model': 'PowerEdge R7525'}
+        mock_response.status_code = 200
+        ethernet_interfaces_mac = {'NIC.Integrated.1-4-1': '68:05:CA:AF:AA:C9',
+                                   'NIC.Slot.7-2-1': '3C:FD:FE:CD:67:31',
+                                   'NIC.Slot.7-1-1': '3C:FD:FE:CD:67:30',
+                                   'NIC.Integrated.1-2-1': '68:05:CA:AF:AA:C7',
+                                   'NIC.Integrated.1-3-1': '68:05:CA:AF:AA:C8',
+                                   'NIC.Integrated.1-1-1': '68:05:CA:AF:AA:C6'}
+
+        self.assertRaises(sushy.exceptions.ExtensionError,
+                          oem.get_pxe_port_macs_bios, ethernet_interfaces_mac)
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test_get_pxe_port_macs_bios_invalid_response(self):
+        oem = self.manager.get_oem_extension('Dell')
+        oem._export_system_configuration = mock.Mock()
+        mock_response = oem._export_system_configuration.return_value
+        mock_response.status_code = 204
+        ethernet_interfaces_mac = {'NIC.Integrated.1-4-1': '68:05:CA:AF:AA:C9',
+                                   'NIC.Slot.7-2-1': '3C:FD:FE:CD:67:31',
+                                   'NIC.Slot.7-1-1': '3C:FD:FE:CD:67:30',
+                                   'NIC.Integrated.1-2-1': '68:05:CA:AF:AA:C7',
+                                   'NIC.Integrated.1-3-1': '68:05:CA:AF:AA:C8',
+                                   'NIC.Integrated.1-1-1': '68:05:CA:AF:AA:C6'}
+
+        self.assertRaises(sushy.exceptions.ExtensionError,
+                          oem.get_pxe_port_macs_bios, ethernet_interfaces_mac)
