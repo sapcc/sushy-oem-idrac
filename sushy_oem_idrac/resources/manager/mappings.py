@@ -17,11 +17,11 @@ from sushy import utils
 from sushy_oem_idrac.resources.manager import constants as mgr_cons
 
 EXPORT_CONFIG_VALUE_MAP = {
-    'ALL': mgr_cons.EXPORT_ALL_CONFIG,
-    'BIOS': mgr_cons.EXPORT_BIOS_CONFIG,
-    'IDRAC': mgr_cons.EXPORT_IDRAC_CONFIG,
-    'NIC': mgr_cons.EXPORT_NIC_CONFIG,
-    'RAID': mgr_cons.EXPORT_RAID_CONFIG
+    'ALL': mgr_cons.EXPORT_TARGET_ALL,
+    'BIOS': mgr_cons.EXPORT_TARGET_BIOS,
+    'IDRAC': mgr_cons.EXPORT_TARGET_IDRAC,
+    'NIC': mgr_cons.EXPORT_TARGET_NIC,
+    'RAID': mgr_cons.EXPORT_TARGET_RAID
 }
 
 EXPORT_CONFIG_VALUE_MAP_REV = utils.revert_dictionary(EXPORT_CONFIG_VALUE_MAP)

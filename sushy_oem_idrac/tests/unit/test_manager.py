@@ -67,14 +67,14 @@ class ManagerTestCase(BaseTestCase):
             '.ImportSystemConfiguration', data=mock.ANY)
 
     @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
-    def test_get_allowed_export_system_config_values(self):
+    def test_get_allowed_export_target_values(self):
         oem = self.manager.get_oem_extension('Dell')
-        expected_values = {mgr_cons.EXPORT_IDRAC_CONFIG,
-                           mgr_cons.EXPORT_RAID_CONFIG,
-                           mgr_cons.EXPORT_ALL_CONFIG,
-                           mgr_cons.EXPORT_BIOS_CONFIG,
-                           mgr_cons.EXPORT_NIC_CONFIG}
-        allowed_values = oem.get_allowed_export_system_config_values()
+        expected_values = {mgr_cons.EXPORT_TARGET_IDRAC,
+                           mgr_cons.EXPORT_TARGET_RAID,
+                           mgr_cons.EXPORT_TARGET_ALL,
+                           mgr_cons.EXPORT_TARGET_BIOS,
+                           mgr_cons.EXPORT_TARGET_NIC}
+        allowed_values = oem.get_allowed_export_target_values()
         self.assertEqual(expected_values, allowed_values)
 
     @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
@@ -90,7 +90,7 @@ class ManagerTestCase(BaseTestCase):
     def test__export_system_configuration(self):
         oem = self.manager.get_oem_extension('Dell')
         oem._export_system_configuration(
-            target=mgr_cons.EXPORT_ALL_CONFIG)
+            target=mgr_cons.EXPORT_TARGET_ALL)
 
         self.conn.post.assert_called_once_with(
             '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'

@@ -14,19 +14,19 @@
 
 # export system config action constants
 
-EXPORT_ALL_CONFIG = 'all'
+EXPORT_TARGET_ALL = 'all'
 """Export entire system configuration"""
 
-EXPORT_BIOS_CONFIG = 'BIOS'
+EXPORT_TARGET_BIOS = 'BIOS'
 """Export BIOS related configuration"""
 
-EXPORT_IDRAC_CONFIG = 'iDRAC'
+EXPORT_TARGET_IDRAC = 'iDRAC'
 """Export IDRAC related configuration"""
 
-EXPORT_NIC_CONFIG = 'NIC'
+EXPORT_TARGET_NIC = 'NIC'
 """Export NIC related configuration"""
 
-EXPORT_RAID_CONFIG = 'RAID'
+EXPORT_TARGET_RAID = 'RAID'
 """Export RAID related configuration"""
 
 # iDRAC Reset action constants

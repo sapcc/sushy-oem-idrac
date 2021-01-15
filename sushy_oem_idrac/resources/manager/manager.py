@@ -23,7 +23,6 @@ from sushy import utils as sushy_utils
 
 from sushy_oem_idrac import asynchronous
 from sushy_oem_idrac import constants
-from sushy_oem_idrac.resources import common as res_common
 from sushy_oem_idrac.resources.manager import constants as mgr_cons
 from sushy_oem_idrac.resources.manager import idrac_card_service
 from sushy_oem_idrac.resources.manager import job_collection
@@ -41,12 +40,20 @@ _SYSTEM_CONFIG_TAG = "SystemConfiguration"
 _RESPONSE_OK_CODE = 200
 
 
+class SharedParameters(base.CompositeField):
+    allowed_target_values = base.Field('Target@Redfish.AllowableValues')
+
+
+class ExportActionField(common.ActionField):
+    shared_parameters = SharedParameters('ShareParameters')
+
+
 class DellManagerActionsField(base.CompositeField):
     import_system_configuration = common.ActionField(
         lambda key, **kwargs: key.endswith(
             '#OemManager.ImportSystemConfiguration'))
 
-    export_system_configuration = res_common.ExportActionField(
+    export_system_configuration = ExportActionField(
         lambda key, **kwargs: key.endswith(
             '#OemManager.ExportSystemConfiguration'))
 
@@ -245,14 +252,13 @@ VFDD\
 
                 attempts -= 1
 
-    def get_allowed_export_system_config_values(self):
-        """Get the allowed values of export system configuration.
+    def get_allowed_export_target_values(self):
+        """Get the allowed targets of export system configuration.
 
         :returns: A set of allowed values.
         """
         export_action = self._actions.export_system_configuration
-        allowed_values = export_action.allowed_values[
-            'Target@Redfish.AllowableValues']
+        allowed_values = export_action.shared_parameters.allowed_target_values
 
         return set([mgr_maps.EXPORT_CONFIG_VALUE_MAP[value] for value in
                     set(mgr_maps.EXPORT_CONFIG_VALUE_MAP).
@@ -267,14 +273,14 @@ VFDD\
         :param target: Component of the system to export the
             configuration from. Can be the entire system.
             Valid values can be gotten from
-            `get_allowed_export_system_config_values`.
+            `get_allowed_export_target_values`.
         :returns: a response object containing configuration details for
             the specified target.
         :raises: InvalidParameterValueError on invalid target.
         :raises: ExtensionError on failure to perform requested
             operation
         """
-        valid_allowed_targets = self.get_allowed_export_system_config_values()
+        valid_allowed_targets = self.get_allowed_export_target_values()
         if target not in valid_allowed_targets:
             raise sushy.exceptions.InvalidParameterValueError(
                 parameter='target', value=target,
@@ -316,7 +322,7 @@ VFDD\
         pxe_port_macs = []
         # Get NIC configuration
         nic_settings = self._export_system_configuration(
-            target=mgr_cons.EXPORT_NIC_CONFIG)
+            target=mgr_cons.EXPORT_TARGET_NIC)
 
         if nic_settings.status_code != _RESPONSE_OK_CODE:
             error = (('An error occurred when attempting to export '
