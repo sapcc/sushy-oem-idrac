@@ -28,8 +28,8 @@ class ActionsField(base.CompositeField):
 class DellLCService(base.ResourceBase):
 
     _actions = ActionsField('Actions')
-    _IDRAC_READY_STATUS_CODE = 200
-    _IDRAC_READY_STATUS = 'Ready'
+    _OK_STATUS_CODE = 200
+    _READY_STATUS = 'Ready'
     identity = base.Field('Id', required=True)
 
     def __init__(self, connector, identity, redfish_version=None,
@@ -46,17 +46,34 @@ class DellLCService(base.ResourceBase):
         super(DellLCService, self).__init__(
             connector, identity, redfish_version, registries)
 
+    def _is_remote_service_api_status_ready(self, status_field):
+        """Checks remote service status field
+
+        :param status_field: Status field to check, e.g., LCStatus, RTStatus
+        :returns: True if response returned and status field is Ready,
+            otherwise False.
+        """
+        target_uri = self._actions.remote_service_api_status.target_uri
+        response = self._conn.post(target_uri, data={})
+        if response.status_code != self._OK_STATUS_CODE:
+            return False
+        data = response.json()
+        return data[status_field] == self._READY_STATUS
+
     def is_idrac_ready(self):
         """Indicates if the iDRAC is ready to accept commands.
 
         :returns: A boolean value True/False based on remote service api status
             response.
         """
-        target_uri = self._actions.remote_service_api_status.target_uri
         LOG.debug('Checking to see if the iDRAC is ready...')
-        idrac_ready_response = self._conn.post(target_uri, data={})
-        if idrac_ready_response.status_code != self._IDRAC_READY_STATUS_CODE:
-            return False
-        data = idrac_ready_response.json()
-        lc_status = data['LCStatus']
-        return lc_status == self._IDRAC_READY_STATUS
+        return self._is_remote_service_api_status_ready('LCStatus')
+
+    def is_realtime_ready(self):
+        """Indicates if real-time operations are ready to be accepted.
+
+        :returns: True if ready to accept real-time operations, otherwise
+            false.
+        """
+        LOG.debug('Checking to see if the real-time operations are ready...')
+        return self._is_remote_service_api_status_ready('RTStatus')

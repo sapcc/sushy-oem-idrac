@@ -69,3 +69,35 @@ class DellLCServiceTestCase(BaseTestCase):
         idrac_ready_response = self.lifecycle_service.is_idrac_ready()
         self.conn.post.assert_called_once_with(target_uri, data={})
         self.assertFalse(idrac_ready_response)
+
+    def test_is_realtime_ready_true(self):
+        mock_response = self.conn.post.return_value
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "LCStatus": "Ready",
+            "RTStatus": "Ready",
+            "ServerStatus": "OutOfPOST",
+            "Status": "Ready"
+            }
+
+        self.assertTrue(self.lifecycle_service.is_realtime_ready())
+        target_uri = ('/redfish/v1/Dell/Managers/iDRAC.Embedded.1'
+                      '/DellLCService'
+                      '/Actions/DellLCService.GetRemoteServicesAPIStatus')
+        self.conn.post.assert_called_once_with(target_uri, data={})
+
+    def test_is_realtime_ready_false(self):
+        mock_response = self.conn.post.return_value
+        mock_response.status_code = 202
+        mock_response.json.return_value = {
+            "LCStatus": "Ready",
+            "RTStatus": "NotReady",
+            "ServerStatus": "OutOfPOST",
+            "Status": "NotReady"
+            }
+
+        self.assertFalse(self.lifecycle_service.is_realtime_ready())
+        target_uri = ('/redfish/v1/Dell/Managers/iDRAC.Embedded.1'
+                      '/DellLCService'
+                      '/Actions/DellLCService.GetRemoteServicesAPIStatus')
+        self.conn.post.assert_called_once_with(target_uri, data={})
