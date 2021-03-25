@@ -113,7 +113,7 @@ VFDD\
         sushy.VIRTUAL_MEDIA_CD: IDRAC_CONFIG_CD
     }
 
-    RETRY_COUNT = 10
+    RETRY_COUNT = 35
     RETRY_DELAY = 15
 
     @property
