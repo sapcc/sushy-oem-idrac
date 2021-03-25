@@ -10,5 +10,5 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-IDRAC_CONFIG_PENDING = 'IDRAC.1.6.LC068'
-IDRAC_JOB_RUNNING = 'IDRAC.1.6.RAC0679'
+IDRAC_CONFIG_PENDING = 'LC068'
+IDRAC_JOB_RUNNING = 'RAC0679'
