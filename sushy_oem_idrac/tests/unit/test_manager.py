@@ -360,3 +360,110 @@ class ManagerTestCase(BaseTestCase):
         self.assertIsInstance(result, TaskMonitor)
         self.assertEqual('/redfish/v1/TaskService/Tasks/JID_905749031119',
                          result.task_monitor_uri)
+
+    def test_reset_idrac_with_wait_true(self):
+        oem_manager = self.manager.get_oem_extension('Dell')
+        oem_manager.idrac_card_service.reset_idrac = mock.Mock()
+        oem_manager._conn._url = "https://1.2.3.4"
+        oem_manager._wait_for_idrac = mock.Mock()
+        oem_manager._wait_until_idrac_is_ready = mock.Mock()
+        oem_manager.reset_idrac(wait=True)
+        oem_manager.idrac_card_service.reset_idrac.assert_called()
+        oem_manager._wait_for_idrac.assert_called_with('1.2.3.4', 60)
+        oem_manager._wait_until_idrac_is_ready.assert_called_with(
+            '1.2.3.4', 96, 10)
+
+    def test_reset_idrac_with_wait_false(self):
+        oem_manager = self.manager.get_oem_extension('Dell')
+        oem_manager.idrac_card_service.reset_idrac = mock.Mock()
+        oem_manager._wait_for_idrac = mock.Mock()
+        oem_manager._wait_until_idrac_is_ready = mock.Mock()
+        oem_manager.reset_idrac(wait=False)
+        oem_manager.idrac_card_service.reset_idrac.assert_called()
+        oem_manager._wait_for_idrac.assert_not_called()
+        oem_manager._wait_until_idrac_is_ready.assert_not_called()
+
+    def test__wait_until_idrac_is_ready(self):
+        oem_manager = self.manager.get_oem_extension('Dell')
+        oem_manager.lifecycle_service.is_idrac_ready = mock.Mock()
+        oem_manager.lifecycle_service.is_idrac_ready.side_effect = \
+            [False, True]
+        oem_manager._wait_until_idrac_is_ready('1.2.3.4', 96, 10)
+        oem_manager.lifecycle_service.is_idrac_ready.assert_called_with()
+
+    @mock.patch('time.sleep', autospec=True)
+    def test__wait_until_idrac_is_ready_with_timeout(self, mock_time_sleep):
+        oem_manager = self.manager.get_oem_extension('Dell')
+        oem_manager.lifecycle_service.is_idrac_ready = mock.Mock()
+        oem_manager.lifecycle_service.is_idrac_ready.return_value = False
+        self.assertRaises(sushy.exceptions.ExtensionError,
+                          oem_manager._wait_until_idrac_is_ready,
+                          '1.2.3.4', 96, 10)
+
+    @mock.patch('time.sleep', autospec=True)
+    def test__wait_for_idrac_with_state_reached(self, mock_time_sleep):
+        oem_manager = self.manager.get_oem_extension('Dell')
+        oem_manager._wait_for_idrac_state = mock.Mock()
+        oem_manager._wait_for_idrac_state.return_value = True
+        oem_manager._wait_for_idrac('1.2.3.4', 30)
+        oem_manager._wait_for_idrac_state.assert_called_with(
+            '1.2.3.4', alive=True, ping_count=3, retries=24)
+        oem_manager._wait_for_idrac_state.assert_any_call(
+            '1.2.3.4', alive=False, ping_count=2, retries=24)
+        self.assertEqual(2, oem_manager._wait_for_idrac_state.call_count)
+
+    @mock.patch('time.sleep', autospec=True)
+    def test__wait_for_idrac_with_first_state_not_reached(self,
+                                                          mock_time_sleep):
+        oem_manager = self.manager.get_oem_extension('Dell')
+        oem_manager._wait_for_idrac_state = mock.Mock()
+        oem_manager._wait_for_idrac_state.return_value = False
+        self.assertRaises(sushy.exceptions.ExtensionError,
+                          oem_manager._wait_for_idrac, '1.2.3.4', 30)
+
+    @mock.patch('time.sleep', autospec=True)
+    def test__wait_for_idrac_with_second_state_not_reached(self,
+                                                           mock_time_sleep):
+        oem_manager = self.manager.get_oem_extension('Dell')
+        oem_manager._wait_for_idrac_state = mock.Mock()
+        oem_manager._wait_for_idrac_state.side_effect = [True, False]
+        self.assertRaises(sushy.exceptions.ExtensionError,
+                          oem_manager._wait_for_idrac, '1.2.3.4', 30)
+
+    @mock.patch('time.sleep', autospec=True)
+    def test__wait_for_idrac_state_with_pingable(self, mock_time_sleep):
+        oem_manager = self.manager.get_oem_extension('Dell')
+        oem_manager._ping_host = mock.Mock()
+        oem_manager._ping_host.return_value = True
+        response = oem_manager._wait_for_idrac_state('1.2.3.4')
+        self.assertEqual(True, response)
+        self.assertEqual(3, oem_manager._ping_host.call_count)
+
+    @mock.patch('time.sleep', autospec=True)
+    def test__wait_for_idrac_state_without_pingable(self, mock_time_sleep):
+        oem_manager = self.manager.get_oem_extension('Dell')
+        oem_manager._ping_host = mock.Mock()
+        oem_manager._ping_host.return_value = False
+        response = oem_manager._wait_for_idrac_state('1.2.3.4')
+        self.assertEqual(False, response)
+        self.assertEqual(24, oem_manager._ping_host.call_count)
+
+    @mock.patch('subprocess.call', autospec=True)
+    def test__ping_host_alive(self, mock_call):
+        oem_manager = self.manager.get_oem_extension('Dell')
+        mock_call.return_value = 0
+
+        result = oem_manager._ping_host('1.2.3.4')
+
+        self.assertTrue(result)
+        mock_call.assert_called_with(["ping", "-c", "1", '1.2.3.4'])
+
+    @mock.patch('subprocess.call', autospec=True)
+    def test__ping_host_not_alive(self, mock_call):
+        oem_manager = self.manager.get_oem_extension('Dell')
+        mock_call.return_value = 1
+
+        result = oem_manager._ping_host('1.2.3.4')
+
+        self.assertFalse(result)
+        mock_call.assert_called_with(["ping", "-c", "1", '1.2.3.4'])

@@ -13,7 +13,9 @@
 # under the License.
 
 import logging
+import subprocess
 import time
+from urllib.parse import urlparse
 
 import sushy
 from sushy.resources import base
@@ -115,6 +117,9 @@ VFDD\
 
     RETRY_COUNT = 35
     RETRY_DELAY = 15
+
+    _IDRAC_IS_READY_RETRIES = 96
+    _IDRAC_IS_READY_RETRY_DELAY_SEC = 10
 
     @property
     def import_system_configuration_uri(self):
@@ -479,6 +484,132 @@ VFDD\
 
         return TaskMonitor.from_response(
             self._conn, response, self.import_system_configuration_uri)
+
+    def reset_idrac(self, wait=True, ready_wait_time=60):
+        """Reset the iDRAC and wait for it to become ready.
+
+        :param wait: Whether to return immediately or wait for iDRAC to
+            become operational.
+        :param ready_wait_time: Amount of time in seconds to wait before
+            starting to check on the iDRAC's status.
+        """
+        self.idrac_card_service.reset_idrac()
+        if not wait:
+            return
+        host = urlparse(self._conn._url).netloc
+        LOG.debug("iDRAC %(host)s was reset, "
+                  "waiting for return to operational state", {'host': host})
+        self._wait_for_idrac(host, ready_wait_time)
+        self._wait_until_idrac_is_ready(host, self._IDRAC_IS_READY_RETRIES,
+                                        self._IDRAC_IS_READY_RETRY_DELAY_SEC)
+
+    def _wait_for_idrac_state(self, host, alive=True, ping_count=3,
+                              retries=24):
+        """Wait for iDRAC to become pingable or not pingable.
+
+        :param host: Hostname or IP of the iDRAC interface.
+        :param alive: True for pingable state and False for not pingable
+            state.
+        :param ping_count: Number of consecutive ping results, per
+            'alive', for success.
+        :param retries: Number of ping retries.
+        :returns: True on reaching specified host ping state; otherwise,
+            False.
+        """
+        if alive:
+            ping_type = "pingable"
+        else:
+            ping_type = "not pingable"
+        LOG.debug("Waiting for iDRAC %(host)s to become %(ping_type)s",
+                  {'host': host, 'ping_type': ping_type})
+        response_count = 0
+        while retries > 0:
+            response = self._ping_host(host)
+            retries -= 1
+            if response == alive:
+                response_count += 1
+                LOG.debug("iDRAC %(host)s is %(ping_type)s, "
+                          "count=%(response_count)s",
+                          {'host': host, 'ping_type': ping_type,
+                           'response_count': response_count})
+                if response_count == ping_count:
+                    LOG.debug("Reached specified %(alive)s count for iDRAC "
+                              "%(host)s", {'alive': alive, 'host': host})
+                    return True
+            else:
+                response_count = 0
+                if alive:
+                    LOG.debug("iDRAC %(host)s is still not pingable",
+                              {'host': host})
+                else:
+                    LOG.debug("iDRAC %(host)s is still pingable",
+                              {'host': host})
+            time.sleep(10)
+        return False
+
+    def _wait_for_idrac(self, host, post_pingable_wait_time):
+        """Wait for iDRAC to transition from unpingable to pingable.
+
+        :param host: Hostname or IP of the iDRAC interface.
+        :param post_pingable_wait_time: Amount of time in seconds to
+            wait after the host becomes pingable.
+        :raises: ExtensionError on failure to perform requested
+            operation.
+        """
+        state_reached = self._wait_for_idrac_state(
+            host, alive=False, ping_count=2, retries=24)
+        if not state_reached:
+            error_msg = ("Timed out waiting iDRAC %(host)s to become not "
+                         "pingable", {'host': host})
+            LOG.error(error_msg)
+            raise sushy.exceptions.ExtensionError(error=error_msg)
+        LOG.debug("iDRAC %(host)s has become not pingable", {'host': host})
+        state_reached = self._wait_for_idrac_state(host, alive=True,
+                                                   ping_count=3, retries=24)
+        if not state_reached:
+            error_msg = ("Timed out waiting iDRAC %(host)s to become pingable",
+                         {'host': host})
+            LOG.error(error_msg)
+            raise sushy.exceptions.ExtensionError(error=error_msg)
+        LOG.debug("iDRAC %(host)s has become pingable", {'host': host})
+        time.sleep(post_pingable_wait_time)
+
+    def _wait_until_idrac_is_ready(self, host, retries, retry_delay):
+        """Wait until the iDRAC is in a ready state.
+
+        :param host: Hostname or IP of the iDRAC interface.
+        :param retries: The number of times to check if the iDRAC is
+            ready.
+        :param retry_delay: The number of seconds to wait between
+            retries.
+        :raises: ExtensionError on failure to perform requested
+            operation.
+        """
+
+        while retries > 0:
+            LOG.debug("Checking to see if iDRAC %(host)s is ready",
+                      {'host': host})
+            if self.lifecycle_service.is_idrac_ready():
+                LOG.debug("iDRAC %(host)s is ready", {'host': host})
+                return
+            LOG.debug("iDRAC %(host)s is not ready", {'host': host})
+            retries -= 1
+            if retries > 0:
+                time.sleep(retry_delay)
+        if retries == 0:
+            error_msg = ("Timed out waiting iDRAC %(host)s to become "
+                         "ready after reset", {'host': host})
+            LOG.error(error_msg)
+            raise sushy.exceptions.ExtensionError(error=error_msg)
+
+    def _ping_host(self, host):
+        """Ping the hostname or IP of a host.
+
+        :param host: Hostname or IP.
+        :returns: True if host is alive; otherwise, False.
+        """
+        response = subprocess.call(["ping", "-c", "1", host])
+        return response == 0
 
 
 def get_extension(*args, **kwargs):
