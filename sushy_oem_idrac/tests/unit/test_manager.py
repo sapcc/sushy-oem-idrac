@@ -68,7 +68,31 @@ class ManagerTestCase(BaseTestCase):
 
         self.conn.post.assert_called_once_with(
             '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
-            '.ImportSystemConfiguration', data=mock.ANY)
+            '.ImportSystemConfiguration',
+            data={'ShareParameters': {'Target': 'ALL'},
+                  'ImportBuffer':
+                  '<SystemConfiguration><Component FQDD="iDRAC.Embedded.1">'
+                  '<Attribute Name="ServerBoot.1#BootOnce">Enabled'
+                  '</Attribute><Attribute Name="ServerBoot.1'
+                  '#FirstBootDevice">VCD-DVD</Attribute></Component>'
+                  '</SystemConfiguration>'})
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test_set_virtual_boot_device_cd_no_manager_passed(self):
+        oem = self.manager.get_oem_extension('Dell')
+
+        oem.set_virtual_boot_device(sushy.VIRTUAL_MEDIA_CD)
+
+        self.conn.post.assert_called_once_with(
+            '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
+            '.ImportSystemConfiguration',
+            data={'ShareParameters': {'Target': 'ALL'},
+                  'ImportBuffer':
+                  '<SystemConfiguration><Component FQDD="iDRAC.Embedded.1">'
+                  '<Attribute Name="ServerBoot.1#BootOnce">Enabled'
+                  '</Attribute><Attribute Name="ServerBoot.1'
+                  '#FirstBootDevice">VCD-DVD</Attribute></Component>'
+                  '</SystemConfiguration>'})
 
     @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
     def test_get_allowed_export_target_values(self):
