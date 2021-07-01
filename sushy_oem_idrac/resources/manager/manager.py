@@ -1,5 +1,3 @@
-# Copyright (c) 2020-2021 Dell Inc. or its subsidiaries.
-#
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
@@ -22,8 +20,6 @@ from sushy.resources.oem import base as oem_base
 
 from sushy_oem_idrac import asynchronous
 from sushy_oem_idrac import constants
-from sushy_oem_idrac.resources import common as res_common
-from sushy_oem_idrac.resources.manager import mappings as mgr_maps
 from sushy_oem_idrac import utils
 
 LOG = logging.getLogger(__name__)
@@ -33,10 +29,6 @@ class DellManagerActionsField(base.CompositeField):
     import_system_configuration = common.ActionField(
         lambda key, **kwargs: key.endswith(
             '#OemManager.ImportSystemConfiguration'))
-
-    export_system_configuration = res_common.ExportActionField(
-        lambda key, **kwargs: key.endswith(
-            '#OemManager.ExportSystemConfiguration'))
 
 
 class DellManagerExtension(oem_base.OEMResourceBase):
@@ -91,10 +83,6 @@ VFDD\
     def import_system_configuration_uri(self):
         return self._actions.import_system_configuration.target_uri
 
-    @property
-    def export_system_configuration_uri(self):
-        return self._actions.export_system_configuration.target_uri
-
     def set_virtual_boot_device(self, device, persistent=False,
                                 manager=None, system=None):
         """Set boot device for a node.
@@ -109,7 +97,7 @@ VFDD\
         :raises: InvalidParameterValue if Dell OEM extension can't
             be used.
         :raises: ExtensionError on failure to perform requested
-            operation.
+            operation
         """
         try:
             idrac_media = self.IDRAC_MEDIA_TYPES[device]
@@ -181,67 +169,6 @@ VFDD\
                     raise
 
                 attempts -= 1
-
-    def get_allowed_export_system_config_values(self):
-        """Get the allowed values of export system configuration.
-
-        :returns: A set of allowed values.
-        """
-        export_action = self._actions.export_system_configuration
-        allowed_values = export_action.allowed_values[
-            'Target@Redfish.AllowableValues']
-
-        return set([mgr_maps.EXPORT_CONFIG_VALUE_MAP[value] for value in
-                    set(mgr_maps.EXPORT_CONFIG_VALUE_MAP).
-                    intersection(allowed_values)])
-
-    def _export_system_configuration(self, target):
-        """Export system configuration.
-
-        It exports system configuration for specified target
-        like NIC, BIOS, RAID.
-
-        :param target: Component of the system to export the
-            configuration from. Can be the entire system.
-            Valid values can be gotten from
-            `get_allowed_export_system_config_values`.
-        :returns: a response object containing configuration details for
-            the specified target.
-        :raises: InvalidParameterValueError on invalid target.
-        :raises: ExtensionError on failure to perform requested
-            operation
-        """
-        valid_allowed_targets = self.get_allowed_export_system_config_values()
-        if target not in valid_allowed_targets:
-            raise sushy.exceptions.InvalidParameterValueError(
-                parameter='target', value=target,
-                valid_values=valid_allowed_targets)
-
-        target = mgr_maps.EXPORT_CONFIG_VALUE_MAP_REV[target]
-
-        action_data = {
-            'ShareParameters': {
-                'Target': target
-            },
-            'ExportFormat': "JSON"
-        }
-
-        try:
-            response = asynchronous.http_call(
-                self._conn,
-                'post',
-                self.export_system_configuration_uri,
-                data=action_data)
-
-            LOG.info("Successfully exported system configuration "
-                     "for %(target)s", {'target': target})
-
-            return response
-
-        except (sushy.exceptions.ExtensionError,
-                sushy.exceptions.InvalidParameterValueError) as exc:
-            LOG.error('Dell OEM export system configuration failed : %s', exc)
-            raise
 
 
 def get_extension(*args, **kwargs):

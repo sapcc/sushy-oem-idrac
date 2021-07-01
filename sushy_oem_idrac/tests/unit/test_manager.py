@@ -1,6 +1,5 @@
 # Copyright 2017 Red Hat, Inc.
 # All Rights Reserved.
-# Copyright (c) 2020-2021 Dell Inc. or its subsidiaries.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -20,8 +19,6 @@ from unittest import mock
 from oslotest.base import BaseTestCase
 import sushy
 from sushy.resources.manager import manager
-
-from sushy_oem_idrac.resources.manager import constants as mgr_cons
 
 
 class ManagerTestCase(BaseTestCase):
@@ -61,42 +58,3 @@ class ManagerTestCase(BaseTestCase):
         self.conn.post.assert_called_once_with(
             '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
             '.ImportSystemConfiguration', data=mock.ANY)
-
-    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
-    def test_get_allowed_export_system_config_values(self):
-        oem = self.manager.get_oem_extension('Dell')
-        expected_values = {mgr_cons.EXPORT_IDRAC_CONFIG,
-                           mgr_cons.EXPORT_RAID_CONFIG,
-                           mgr_cons.EXPORT_ALL_CONFIG,
-                           mgr_cons.EXPORT_BIOS_CONFIG,
-                           mgr_cons.EXPORT_NIC_CONFIG}
-        allowed_values = oem.get_allowed_export_system_config_values()
-        self.assertEqual(expected_values, allowed_values)
-
-    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
-    def test_export_system_configuration_uri(self):
-        oem = self.manager.get_oem_extension('Dell')
-
-        self.assertEqual(
-            '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
-            '.ExportSystemConfiguration',
-            oem.export_system_configuration_uri)
-
-    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
-    def test__export_system_configuration(self):
-        oem = self.manager.get_oem_extension('Dell')
-        oem._export_system_configuration(
-            target=mgr_cons.EXPORT_ALL_CONFIG)
-
-        self.conn.post.assert_called_once_with(
-            '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
-            '.ExportSystemConfiguration', data={'ShareParameters':
-                                                {'Target': 'ALL'},
-                                                'ExportFormat': 'JSON'})
-
-    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
-    def test__export_system_configuration_invalid_target(self):
-        oem = self.manager.get_oem_extension('Dell')
-        target = "xyz"
-        self.assertRaises(sushy.exceptions.InvalidParameterValueError,
-                          oem._export_system_configuration, target)
