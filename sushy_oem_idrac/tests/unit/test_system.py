@@ -110,3 +110,14 @@ class SystemTestCase(BaseTestCase):
         mock_raid.assert_not_called()
         mock_nonraid.assert_called_once_with(
             ['Disk.Bay.0:Enclosure.Internal.0-1:RAID.Integrated.1-1'])
+
+    def test_clear_foreign_config(self):
+        mock_taskmon = mock.Mock()
+        mock_clear_foreign_config = mock.Mock()
+        mock_clear_foreign_config.side_effect = [None, mock_taskmon]
+        self.oem_system.raid_service.clear_foreign_config =\
+            mock_clear_foreign_config
+
+        task_mons = self.oem_system.clear_foreign_config()
+
+        self.assertEqual([mock_taskmon], task_mons)
