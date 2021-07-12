@@ -124,10 +124,11 @@ class ManagerTestCase(BaseTestCase):
     @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
     def test__export_system_configuration_nondefault(self):
         oem = self.manager.get_oem_extension('Dell')
+        include_in_export = mgr_cons.INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES
         oem._export_system_configuration(
             target=mgr_cons.EXPORT_TARGET_RAID,
             export_use=mgr_cons.EXPORT_USE_CLONE,
-            include_in_export=mgr_cons.INCLUDE_EXPORT_READ_ONLY)
+            include_in_export=include_in_export)
 
         self.conn.post.assert_called_once_with(
             '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
@@ -136,7 +137,8 @@ class ManagerTestCase(BaseTestCase):
                                                 'ExportFormat': 'JSON',
                                                 'ExportUse': 'Clone',
                                                 'IncludeInExport':
-                                                    'IncludeReadOnly'})
+                                                    'IncludeReadOnly,Include'
+                                                    'PasswordHashValues'})
 
     @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
     def test__export_system_configuration_invalid_target(self):
@@ -156,6 +158,49 @@ class ManagerTestCase(BaseTestCase):
         self.assertRaises(sushy.exceptions.InvalidParameterValueError,
                           oem._export_system_configuration, "RAID",
                           include_in_export="ABC")
+
+    def test__export_system_configuration_invalid_include_in_export_part(self):
+        oem = self.manager.get_oem_extension('Dell')
+        export_action = ('OemManager.v1_0_0'
+                         '#OemManager.ExportSystemConfiguration')
+        # Remove `IncludePasswordHashValues` from allowed values
+        oem.json['Actions']['Oem'][export_action]['IncludeInExport@Redfish.'
+                                                  'AllowableValues'] =\
+            ['Default', 'IncludeReadOnly']
+        oem.refresh()
+        oem = self.manager.get_oem_extension('Dell')
+        include_in_export = mgr_cons.INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES
+        self.assertRaises(sushy.exceptions.InvalidParameterValueError,
+                          oem._export_system_configuration, "RAID",
+                          include_in_export=include_in_export)
+
+    def test__export_system_configuration_include_in_export_legacy(
+            self):
+        oem = self.manager.get_oem_extension('Dell')
+        export_action = ('OemManager.v1_0_0'
+                         '#OemManager.ExportSystemConfiguration')
+        # Add `IncludeReadOnly,IncludePasswordHashValues` to allowed values
+        oem.json['Actions']['Oem'][export_action]['IncludeInExport@Redfish.'
+                                                  'AllowableValues'] =\
+            ['Default', 'IncludeReadOnly', 'IncludePasswordHashValues',
+             'IncludeReadOnly,IncludePasswordHashValues']
+        oem.refresh()
+
+        include_in_export = mgr_cons.INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES
+        oem._export_system_configuration(
+            target=mgr_cons.EXPORT_TARGET_RAID,
+            export_use=mgr_cons.EXPORT_USE_CLONE,
+            include_in_export=include_in_export)
+
+        self.conn.post.assert_called_once_with(
+            '/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager'
+            '.ExportSystemConfiguration', data={'ShareParameters':
+                                                {'Target': 'RAID'},
+                                                'ExportFormat': 'JSON',
+                                                'ExportUse': 'Clone',
+                                                'IncludeInExport':
+                                                    'IncludeReadOnly,Include'
+                                                    'PasswordHashValues'})
 
     @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
     def test_get_allowed_export_use_values(self):
@@ -188,8 +233,7 @@ class ManagerTestCase(BaseTestCase):
         oem = self.manager.get_oem_extension('Dell')
         expected_values = {mgr_cons.INCLUDE_EXPORT_DEFAULT,
                            mgr_cons.INCLUDE_EXPORT_READ_ONLY,
-                           mgr_cons.INCLUDE_EXPORT_PASSWORD_HASHES,
-                           mgr_cons.INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES}
+                           mgr_cons.INCLUDE_EXPORT_PASSWORD_HASHES}
         allowed_values = oem.get_allowed_include_in_export_values()
         self.assertIsInstance(allowed_values, set)
         self.assertEqual(expected_values, allowed_values)
