@@ -357,9 +357,25 @@ VFDD\
 
         allowed_include_in_export = self.get_allowed_include_in_export_values()
         if include_in_export not in allowed_include_in_export:
-            raise sushy.exceptions.InvalidParameterValueError(
-                parameter='include_in_export', value=include_in_export,
-                valid_values=allowed_include_in_export)
+            # Check if value contains comma and validate each item separately
+            # Older iDRACs used to include comma separated option in
+            # AllowableValues but got removed in newer versions violating
+            # AllowableValues validation logic.
+            include_in_export_rev =\
+                mgr_maps.INCLUDE_EXPORT_VALUE_MAP_REV.get(include_in_export)
+            all_items_valid = False
+            if include_in_export_rev is not None:
+                items = include_in_export_rev.split(',')
+                all_items_valid = True
+                for item in items:
+                    if (mgr_maps.INCLUDE_EXPORT_VALUE_MAP[item]
+                            not in allowed_include_in_export):
+                        all_items_valid = False
+                        break
+            if not all_items_valid:
+                raise sushy.exceptions.InvalidParameterValueError(
+                    parameter='include_in_export', value=include_in_export,
+                    valid_values=allowed_include_in_export)
 
         target = mgr_maps.EXPORT_CONFIG_VALUE_MAP_REV[target]
         export_use = mgr_maps.EXPORT_USE_VALUE_MAP_REV[export_use]

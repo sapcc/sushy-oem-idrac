@@ -31,8 +31,7 @@
                 "IncludeInExport@Redfish.AllowableValues": [
                     "Default",
                     "IncludeReadOnly",
-                    "IncludePasswordHashValues",
-                    "IncludeReadOnly,IncludePasswordHashValues"
+                    "IncludePasswordHashValues"
                 ],
                 "ShareParameters": {
                     "IgnoreCertificateWarning@Redfish.AllowableValues": [
