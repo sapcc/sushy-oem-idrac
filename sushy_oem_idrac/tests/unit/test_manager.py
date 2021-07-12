@@ -82,6 +82,23 @@ class ManagerTestCase(BaseTestCase):
         self.assertEqual(expected_values, allowed_values)
 
     @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test_get_allowed_export_target_values_missing(self):
+        oem = self.manager.get_oem_extension('Dell')
+        export_action = ('OemManager.v1_0_0'
+                         '#OemManager.ExportSystemConfiguration')
+        oem.json['Actions']['Oem'][export_action]['ShareParameters'].pop(
+            'Target@Redfish.AllowableValues')
+        oem.refresh()
+        oem = self.manager.get_oem_extension('Dell')
+        expected_values = {mgr_cons.EXPORT_TARGET_IDRAC,
+                           mgr_cons.EXPORT_TARGET_RAID,
+                           mgr_cons.EXPORT_TARGET_ALL,
+                           mgr_cons.EXPORT_TARGET_BIOS,
+                           mgr_cons.EXPORT_TARGET_NIC}
+        allowed_values = oem.get_allowed_export_target_values()
+        self.assertEqual(expected_values, allowed_values)
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
     def test_export_system_configuration_uri(self):
         oem = self.manager.get_oem_extension('Dell')
 

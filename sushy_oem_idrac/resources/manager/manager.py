@@ -275,6 +275,12 @@ VFDD\
         export_action = self._actions.export_system_configuration
         allowed_values = export_action.shared_parameters.allowed_target_values
 
+        if not allowed_values:
+            LOG.warning('Could not figure out the allowed values for the '
+                        'target of export system configuration at %s',
+                        self.path)
+            return set(mgr_maps.EXPORT_CONFIG_VALUE_MAP_REV)
+
         return set([mgr_maps.EXPORT_CONFIG_VALUE_MAP[value] for value in
                     set(mgr_maps.EXPORT_CONFIG_VALUE_MAP).
                     intersection(allowed_values)])
