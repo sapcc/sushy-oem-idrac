@@ -289,10 +289,11 @@ class ManagerTestCase(BaseTestCase):
         response = oem.export_system_configuration()
 
         self.assertEqual(mock_response, response)
+        include_in_export = mgr_cons.INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES
         oem._export_system_configuration.assert_called_once_with(
             mgr_cons.EXPORT_TARGET_ALL,
             export_use=mgr_cons.EXPORT_USE_CLONE,
-            include_in_export=mgr_cons.INCLUDE_EXPORT_PASSWORD_HASHES)
+            include_in_export=include_in_export)
 
     @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
     def test_get_pxe_port_macs_bios(self):

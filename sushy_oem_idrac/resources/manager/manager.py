@@ -414,17 +414,19 @@ VFDD\
     def export_system_configuration(self):
         """Export system configuration.
 
-        Exports ALL targets for cloning and includes password hashes.
+        Exports ALL targets for cloning and includes password hashes and
+        read-only attributes.
 
         :returns: Response object containing configuration details.
         :raises: InvalidParameterValueError on invalid target.
         :raises: ExtensionError on failure to perform requested
             operation
         """
+        include_in_export = mgr_cons.INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES
         return self._export_system_configuration(
             mgr_cons.EXPORT_TARGET_ALL,
             export_use=mgr_cons.EXPORT_USE_CLONE,
-            include_in_export=mgr_cons.INCLUDE_EXPORT_PASSWORD_HASHES)
+            include_in_export=include_in_export)
 
     def get_pxe_port_macs_bios(self, ethernet_interfaces_mac):
         """Get a list of pxe port MAC addresses for BIOS.
