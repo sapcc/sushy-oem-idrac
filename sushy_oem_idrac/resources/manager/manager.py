@@ -191,6 +191,8 @@ VFDD\
         :param device: Boot device. Values are vendor-specific.
         :param persistent: Whether to set next-boot, or make the change
             permanent. Default: False.
+        :param manager: Manager of OEM extension. Optional.
+        :param system: System of OEM extension. Optional.
         :raises: InvalidParameterValue if Dell OEM extension can't
             be used.
         :raises: ExtensionError on failure to perform requested
@@ -204,7 +206,8 @@ VFDD\
                 error='Unknown or unsupported device %s' % device)
 
         idrac_media = idrac_media % (
-            manager.identity, 'Disabled' if persistent else 'Enabled')
+            manager.identity if manager else self._parent_resource.identity,
+            'Disabled' if persistent else 'Enabled')
 
         action_data = dict(self.ACTION_DATA, ImportBuffer=idrac_media)
 
