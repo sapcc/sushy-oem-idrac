@@ -23,17 +23,10 @@ from sushy.resources.oem import base as oem_base
 from sushy_oem_idrac import asynchronous
 from sushy_oem_idrac import constants
 from sushy_oem_idrac.resources import common as res_common
-from sushy_oem_idrac.resources.manager import constants as mgr_cons
 from sushy_oem_idrac.resources.manager import mappings as mgr_maps
 from sushy_oem_idrac import utils
 
 LOG = logging.getLogger(__name__)
-
-# System Configuration Tag Constant
-_SYSTEM_CONFIG_TAG = "SystemConfiguration"
-
-# Response Code Constant
-_RESPONSE_OK_CODE = 200
 
 
 class DellManagerActionsField(base.CompositeField):
@@ -249,44 +242,6 @@ VFDD\
                 sushy.exceptions.InvalidParameterValueError) as exc:
             LOG.error('Dell OEM export system configuration failed : %s', exc)
             raise
-
-    def get_pxe_port_macs_bios(self, ethernet_interfaces_mac):
-        """Get a list of pxe port MAC addresses for BIOS.
-
-        :param ethernet_interfaces_mac: Dictionary of ethernet interfaces.
-        :returns: List of pxe port MAC addresses.
-        :raises: ExtensionError on failure to perform requested operation.
-        """
-        pxe_port_macs = []
-        # Get NIC configuration
-        nic_settings = self._export_system_configuration(
-            target=mgr_cons.EXPORT_NIC_CONFIG)
-
-        if nic_settings.status_code != _RESPONSE_OK_CODE:
-            error = (('An error occurred when attempting to export '
-                     'the system configuration. Status code: %(code), '
-                      'Error details: %(err)'),
-                     {'code': nic_settings.status_code,
-                      'err': nic_settings.__dict__})
-            LOG.error(error)
-            raise sushy.exceptions.ExtensionError(error=error)
-        # Parse the exported system configuration for the NIC
-        # ports that are set to PXE boot
-        json_data = nic_settings.json()
-        if _SYSTEM_CONFIG_TAG in json_data.keys():
-            for root in json_data[_SYSTEM_CONFIG_TAG]['Components']:
-                nic_id = root['FQDD']
-                for child in root['Attributes']:
-                    if child.get('Name') == "LegacyBootProto":
-                        if child['Value'] == "PXE":
-                            mac_address = ethernet_interfaces_mac[nic_id]
-                            pxe_port_macs.append(mac_address)
-            return pxe_port_macs
-
-        else:
-            error = (('Failed to get system configuration from response'))
-            LOG.error(error)
-            raise sushy.exceptions.ExtensionError(error=error)
 
 
 def get_extension(*args, **kwargs):
