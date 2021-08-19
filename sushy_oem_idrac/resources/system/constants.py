@@ -12,4 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from sushy_oem_idrac.resources.system.constants import *  # noqa
+PHYSICAL_DISK_STATE_MODE_RAID = 'RAID'
+"""RAID mode"""
+
+PHYSICAL_DISK_STATE_MODE_NONRAID = 'Non-RAID'
+"""Non-RAID mode"""
