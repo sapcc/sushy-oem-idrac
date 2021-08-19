@@ -19,6 +19,8 @@ from sushy.resources import base
 from sushy.resources import common
 from sushy import taskmonitor
 
+from sushy_oem_idrac import constants
+
 LOG = logging.getLogger(__name__)
 
 
@@ -26,6 +28,8 @@ class ActionsField(base.CompositeField):
     convert_to_raid = common.ActionField("#DellRaidService.ConvertToRAID")
     convert_to_nonraid = common.ActionField(
         "#DellRaidService.ConvertToNonRAID")
+    clear_foreign_config = common.ActionField(
+        "#DellRaidService.ClearForeignConfig")
 
 
 class DellRaidService(base.ResourceBase):
@@ -77,6 +81,41 @@ class DellRaidService(base.ResourceBase):
         task_monitor = self._get_task_monitor_from_dell_job(response)
         LOG.info('Converting to non-RAID mode: %s', physical_disk_fqdds)
         return task_monitor
+
+    def clear_foreign_config(self, controller_fqdd):
+        """Clears foreign configuration
+
+        Prepares any foreign physical disks for inclusion in the local
+        configuration
+
+        :param controller_fqdd: FQDD of controller to clear foreign
+            config
+
+        :returns: Sushy's TaskMonitor instance for TaskService task if
+            there are foreign drives to clear, otherwise None.
+        """
+        target_uri = self._actions.clear_foreign_config.target_uri
+        payload = {'TargetFQDD': controller_fqdd}
+
+        try:
+            response = self._conn.post(target_uri, data=payload)
+        except exceptions.BadRequestError as ex:
+            # Check if failed for no foreign drives
+            errors = ex.body and ex.body.get('@Message.ExtendedInfo') or []
+
+            no_foreign_conf = [x for x in errors if constants.NO_FOREIGN_CONFIG
+                               in x.get('MessageId')]
+
+            if len(no_foreign_conf) == 0:
+                raise ex
+            else:
+                LOG.debug('%s: %s', no_foreign_conf[0].get('Message'),
+                          controller_fqdd)
+                return
+
+        task_mon = self._get_task_monitor_from_dell_job(response)
+        LOG.info('Clearing foreign config: %s', controller_fqdd)
+        return task_mon
 
     def _get_task_monitor_from_dell_job(self, response):
         """From OEM job response returns generic Task monitor

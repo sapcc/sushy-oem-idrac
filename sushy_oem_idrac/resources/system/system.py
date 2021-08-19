@@ -108,6 +108,25 @@ class DellSystemExtension(oem_base.OEMResourceBase):
 
         return task_monitors
 
+    def clear_foreign_config(self, storage_list=None):
+        """Clears foreign config on given controllers
+
+        :param storage_list: List of storage objects, each of which
+            corresponds to a controller
+        :returns: List of task monitors, where each entry is for a
+            controller that has foreign config to clear
+        """
+        if storage_list is None:
+            storage_list = self._get_storage_list()
+
+        task_monitors = []
+        for storage in storage_list:
+            task_mon = self.raid_service.clear_foreign_config(storage.identity)
+            if task_mon:
+                task_monitors.append(task_mon)
+
+        return task_monitors
+
     def _get_controller_to_disks(self):
         """Gets all RAID controllers and their disks on system
 
@@ -121,6 +140,20 @@ class DellSystemExtension(oem_base.OEMResourceBase):
                 continue
             controller_to_disks[controller] = storage.drives
         return controller_to_disks
+
+    def _get_storage_list(self):
+        """Gets all storage items corresponding to RAID controllers
+
+        :returns: list of storage items
+        """
+        storage_list = []
+        for storage in self._parent_resource.storage.get_members():
+            controller = (storage.storage_controllers[0]
+                          if storage.storage_controllers else None)
+            if not controller or controller and not controller.raid_types:
+                continue
+            storage_list.append(storage)
+        return storage_list
 
 
 def get_extension(*args, **kwargs):
