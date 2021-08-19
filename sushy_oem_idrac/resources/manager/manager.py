@@ -147,7 +147,7 @@ VFDD\
                     LOG.warning('iDRAC error: %s',
                                 error.get('Message', 'Unknown error'))
 
-                    if message_id == constants.IDRAC_CONFIG_PENDING:
+                    if constants.IDRAC_CONFIG_PENDING in message_id:
                         if not rebooted:
                             LOG.warning(
                                 'Let\'s try to turn it off and on again... '
@@ -157,7 +157,7 @@ VFDD\
                             rebooted = True
                             break
 
-                    elif message_id == constants.IDRAC_JOB_RUNNING:
+                    elif constants.IDRAC_JOB_RUNNING in message_id:
                         pass
 
                 else:
