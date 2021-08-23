@@ -13,3 +13,4 @@
 # under the License.
 
 from sushy_oem_idrac.resources.manager.constants import *  # noqa
+from sushy_oem_idrac.resources.system.constants import *  # noqa
