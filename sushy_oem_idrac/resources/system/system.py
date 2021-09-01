@@ -119,6 +119,13 @@ class DellSystemExtension(oem_base.OEMResourceBase):
         if storage_list is None:
             storage_list = self._get_storage_list()
 
+        # Do not process BOSS controllers as not supporting clearing
+        boss_storage = [s for s in storage_list
+                        if any(c for c in s.storage_controllers
+                               if 'BOSS' in c.name.upper())]
+        for s in boss_storage:
+            storage_list.remove(s)
+
         task_monitors = []
         for storage in storage_list:
             task_mon = self.raid_service.clear_foreign_config(storage.identity)

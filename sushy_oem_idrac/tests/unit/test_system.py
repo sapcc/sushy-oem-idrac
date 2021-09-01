@@ -114,7 +114,7 @@ class SystemTestCase(BaseTestCase):
     def test_clear_foreign_config(self):
         mock_taskmon = mock.Mock()
         mock_clear_foreign_config = mock.Mock()
-        mock_clear_foreign_config.side_effect = [None, mock_taskmon]
+        mock_clear_foreign_config.side_effect = [mock_taskmon]
         self.oem_system.raid_service.clear_foreign_config =\
             mock_clear_foreign_config
 
