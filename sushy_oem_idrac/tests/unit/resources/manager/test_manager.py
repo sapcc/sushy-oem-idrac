@@ -296,6 +296,29 @@ class ManagerTestCase(BaseTestCase):
             include_in_export=include_in_export)
 
     @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
+    def test_export_system_configuration_destructive_fields(self):
+        oem = self.manager.get_oem_extension('Dell')
+        oem._export_system_configuration = mock.Mock()
+        with open('sushy_oem_idrac/tests/unit/json_samples/'
+                  'export_configuration_idrac.json') as f:
+            mock_response = oem._export_system_configuration.return_value
+            mock_response.json.return_value = json.load(f)
+            mock_response.status_code = 200
+
+        response = oem.export_system_configuration(
+            include_destructive_fields=False)
+
+        response_json = json.loads(response._content)
+        # From 40 items in test data 16 should be removed
+        self.assertEqual(24, len(response_json['SystemConfiguration']
+                                 ['Components'][0]['Attributes']))
+        include_in_export = mgr_cons.INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES
+        oem._export_system_configuration.assert_called_once_with(
+            mgr_cons.EXPORT_TARGET_ALL,
+            export_use=mgr_cons.EXPORT_USE_CLONE,
+            include_in_export=include_in_export)
+
+    @mock.patch('sushy.resources.oem.common._global_extn_mgrs_by_resource', {})
     def test_get_pxe_port_macs_bios(self):
         oem = self.manager.get_oem_extension('Dell')
         oem._export_system_configuration = mock.Mock()

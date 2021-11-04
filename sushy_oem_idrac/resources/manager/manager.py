@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import json
 import logging
 import subprocess
 import time
@@ -41,6 +42,12 @@ _SYSTEM_CONFIG_TAG = "SystemConfiguration"
 
 # Response Code Constant
 _RESPONSE_OK_CODE = 200
+
+# Structure {'Component FQDD': (tuple of beginning of Attribute keys)}
+_DESTRUCTIVE_CONF_KEYS = {
+    'iDRAC.Embedded.1':
+        ('IPv4Static', 'IPv6Static', 'IPv4.1#Enable', 'IPv4.1#DHCPEnable',
+         'IPv6.1#Enable', 'IPv6.1#AutoConfig')}
 
 
 class SharedParameters(base.CompositeField):
@@ -411,22 +418,43 @@ VFDD\
             LOG.error('Dell OEM export system configuration failed : %s', exc)
             raise
 
-    def export_system_configuration(self):
+    def export_system_configuration(self, include_destructive_fields=True):
         """Export system configuration.
 
         Exports ALL targets for cloning and includes password hashes and
         read-only attributes.
 
+        :param include_destructive_fields: Whether includes settings such as
+            iDRAC static IP address that could lead to losing access to iDRAC
+            if importing this configuration into another system. Default to
+            True for backward compability. False recommended if unsure.
         :returns: Response object containing configuration details.
         :raises: InvalidParameterValueError on invalid target.
         :raises: ExtensionError on failure to perform requested
             operation
         """
         include_in_export = mgr_cons.INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES
-        return self._export_system_configuration(
+
+        response = self._export_system_configuration(
             mgr_cons.EXPORT_TARGET_ALL,
             export_use=mgr_cons.EXPORT_USE_CLONE,
             include_in_export=include_in_export)
+
+        if (response.status_code == _RESPONSE_OK_CODE
+                and not include_destructive_fields):
+            conf = response.json()
+            if _SYSTEM_CONFIG_TAG in conf.keys():
+                for fqdd, values in _DESTRUCTIVE_CONF_KEYS.items():
+                    for comp in conf[_SYSTEM_CONFIG_TAG]['Components']:
+                        if comp['FQDD'] == fqdd:
+                            attributes_copy = comp['Attributes'].copy()
+                            for child in comp['Attributes']:
+                                if child.get('Name').startswith(values):
+                                    attributes_copy.remove(child)
+                            comp['Attributes'] = attributes_copy
+            response._content = json.dumps(conf).encode()
+
+        return response
 
     def get_pxe_port_macs_bios(self, ethernet_interfaces_mac):
         """Get a list of pxe port MAC addresses for BIOS.
