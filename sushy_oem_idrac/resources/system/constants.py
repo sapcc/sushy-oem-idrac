@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Dell Inc. or its subsidiaries.
+# Copyright (c) 2021-2022 Dell Inc. or its subsidiaries.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -12,8 +12,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-PHYSICAL_DISK_STATE_MODE_RAID = 'RAID'
-"""RAID mode"""
+import enum
 
-PHYSICAL_DISK_STATE_MODE_NONRAID = 'Non-RAID'
-"""Non-RAID mode"""
+
+class PhysicalDiskStateMode(enum.Enum):
+    """Physical disk state mode constants"""
+
+    RAID = 'RAID'
+    """RAID physical disk state mode"""
+
+    NONRAID = 'Non-RAID'
+    """Non-RAID physical disk state mode"""
+
+
+# For backward compatibility
+PHYSICAL_DISK_STATE_MODE_RAID = PhysicalDiskStateMode.RAID
+PHYSICAL_DISK_STATE_MODE_NONRAID = PhysicalDiskStateMode.NONRAID

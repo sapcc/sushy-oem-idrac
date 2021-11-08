@@ -49,6 +49,11 @@ class TaskTestCase(BaseTestCase):
         self.assertEqual('Job Instance', self.oem_task.description)
         self.assertIsNone(self.oem_task.completion_time)
         self.assertEqual('TIME_NA', self.oem_task.end_time)
+        self.assertEqual(ts_cons.JobState.SCHEDULED,
+                         self.oem_task.job_state)
+        self.assertEqual(ts_cons.JobType.RAID_CONF,
+                         self.oem_task.job_type)
+        # For backward compability
         self.assertEqual(ts_cons.JOB_STATE_SCHEDULED,
                          self.oem_task.job_state)
         self.assertEqual(ts_cons.JOB_TYPE_RAID_CONF,

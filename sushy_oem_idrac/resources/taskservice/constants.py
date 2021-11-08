@@ -12,166 +12,234 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# Job state constants
-JOB_STATE_COMPLETED = "Completed"
-"""A job is in completed state"""
+import enum
 
-JOB_STATE_COMPLETED_ERRORS = "Completed with errors"
-"""A job is in completed state with errors"""
 
-JOB_STATE_DOWNLOADED = "Downloaded"
-"""A job is in downloaded state"""
+class JobState(enum.Enum):
+    """Job state constants"""
 
-JOB_STATE_DOWNLOADING = "Downloading"
-"""A job is in downloading state"""
+    COMPLETED = "Completed"
+    """A job is in completed state"""
 
-JOB_STATE_FAILED = "Failed"
-"""A job is in failed state"""
+    COMPLETED_ERRORS = "CompletedWithErrors"
+    """A job is in completed state with errors"""
 
-JOB_STATE_NEW = "New"
-"""A job is in newly created state"""
+    DOWNLOADED = "Downloaded"
+    """A job is in downloaded state"""
 
-JOB_STATE_PAUSED = "Paused"
-"""A job is in paused state"""
+    DOWNLOADING = "Downloading"
+    """A job is in downloading state"""
 
-JOB_STATE_PENDING_ACTIVATION = "Pending activation"
-"""A job is in pending activation state"""
+    FAILED = "Failed"
+    """A job is in failed state"""
 
-JOB_STATE_READY_EXECUTION = "Ready for execution"
-"""A job is in ready for execution state"""
+    NEW = "New"
+    """A job is in newly created state"""
 
-JOB_STATE_REBOOT_COMPLETED = "Reboot completed"
-"""A job is in reboot completed state"""
+    PAUSED = "Paused"
+    """A job is in paused state"""
 
-JOB_STATE_REBOOT_FAILED = "Reboot failed"
-"""A job is in reboot failed state"""
+    PENDING_ACTIVATION = "PendingActivation"
+    """A job is in pending activation state"""
 
-JOB_STATE_REBOOT_PENDING = "Reboot pending"
-"""A job is in pending state for reboot"""
+    READY_EXECUTION = "ReadyForExecution"
+    """A job is in ready for execution state"""
 
-JOB_STATE_RUNNING = "Running"
-"""A job is in running state"""
+    REBOOT_COMPLETED = "RebootCompleted"
+    """A job is in reboot completed state"""
 
-JOB_STATE_SCHEDULED = "Scheduled"
-"""A job is in scheduled state"""
+    REBOOT_FAILED = "RebootFailed"
+    """A job is in reboot failed state"""
 
-JOB_STATE_SCHEDULING = "Scheduling"
-"""A job is in scheduling state"""
+    REBOOT_PENDING = "RebootPending"
+    """A job is in pending state for reboot"""
 
-JOB_STATE_UNKNOWN = "Unknown"
-"""A job is in unknown state"""
+    RUNNING = "Running"
+    """A job is in running state"""
 
-JOB_STATE_WAITING = "Waiting"
-"""A job is in waiting state"""
+    SCHEDULED = "Scheduled"
+    """A job is in scheduled state"""
 
-# Job type constants
-JOB_TYPE_BIOS_CONF = "BIOS configuration"
-"""A BIOS configuration job"""
+    SCHEDULING = "Scheduling"
+    """A job is in scheduling state"""
 
-JOB_TYPE_EXPORT_CONF = "Export configuration"
-"""A server configuration profile export job"""
+    UNKNOWN = "Unknown"
+    """A job is in unknown state"""
 
-JOB_TYPE_FC_CONF = "Fibre Channel configuration"
-"""A Fibre Channel configuration job"""
+    WAITING = "Waiting"
+    """A job is in waiting state"""
 
-JOB_TYPE_FACTORY_CONF_EXPORT = "Factory configuration export"
-"""A factory configuration export job"""
 
-JOB_TYPE_FIRMWARE_ROLLBACK = "Firmware rollback"
-"""A firmware rollback job"""
+# Backward compatibility
+JOB_STATE_COMPLETED = JobState.COMPLETED
+JOB_STATE_COMPLETED_ERRORS = JobState.COMPLETED_ERRORS
+JOB_STATE_DOWNLOADED = JobState.DOWNLOADED
+JOB_STATE_DOWNLOADING = JobState.DOWNLOADING
+JOB_STATE_FAILED = JobState.FAILED
+JOB_STATE_NEW = JobState.NEW
+JOB_STATE_PAUSED = JobState.PAUSED
+JOB_STATE_PENDING_ACTIVATION = JobState.PENDING_ACTIVATION
+JOB_STATE_READY_EXECUTION = JobState.READY_EXECUTION
+JOB_STATE_REBOOT_COMPLETED = JobState.REBOOT_COMPLETED
+JOB_STATE_REBOOT_FAILED = JobState.REBOOT_FAILED
+JOB_STATE_REBOOT_PENDING = JobState.REBOOT_PENDING
+JOB_STATE_RUNNING = JobState.RUNNING
+JOB_STATE_SCHEDULED = JobState.SCHEDULED
+JOB_STATE_SCHEDULING = JobState.SCHEDULING
+JOB_STATE_UNKNOWN = JobState.UNKNOWN
+JOB_STATE_WAITING = JobState.WAITING
 
-JOB_TYPE_FIRMWARE_UPDATE = "Firmware update"
-"""A firmware update job"""
 
-JOB_TYPE_HW_INVENTORY_EXPORT = "Hardware inventory export"
-"""A hardware inventory export job"""
+class JobType(enum.Enum):
+    """Job type constants"""
 
-JOB_TYPE_IMPORT_CONF = "Import configuration"
-"""A server configuration profile import job"""
+    BIOS_CONF = "BIOSConfiguration"
+    """A BIOS configuration job"""
 
-JOB_TYPE_INBAND_BIOS_CONF = "Inband BIOS configuration"
-"""An inband BIOS configuration job"""
+    EXPORT_CONF = "ExportConfiguration"
+    """A server configuration profile export job"""
 
-JOB_TYPE_LC_CONF = "LC configuration"
-"""A lifecycle controller attribute configuration job"""
+    FC_CONF = "FCConfiguration"
+    """A Fibre Channel configuration job"""
 
-JOB_TYPE_LC_EXPORT = "LC export"
-"""A lifecycle controller export job"""
+    FACTORY_CONF_EXPORT = "FactoryConfigurationExport"
+    """A factory configuration export job"""
 
-JOB_TYPE_LC_LOG_EXPORT = "LC log export"
-"""A lifecycle controller log export job"""
+    FIRMWARE_ROLLBACK = "FirmwareRollback"
+    """A firmware rollback job"""
 
-JOB_TYPE_LICENSE_EXPORT = "License export"
-"""A license export job"""
+    FIRMWARE_UPDATE = "FirmwareUpdate"
+    """A firmware update job"""
 
-JOB_TYPE_LICENSE_IMPORT = "License import"
-"""A license import job"""
+    HW_INVENTORY_EXPORT = "HardwareInventoryExport"
+    """A hardware inventory export job"""
 
-JOB_TYPE_MSG_REG_EXPORT = "Message registry export"
-"""Export message registry report job"""
+    IMPORT_CONF = "ImportConfiguration"
+    """A server configuration profile import job"""
 
-JOB_TYPE_NIC_CONF = "NIC configuration"
-"""A NIC configuration job"""
+    INBAND_BIOS_CONF = "InbandBIOSConfiguration"
+    """An inband BIOS configuration job"""
 
-JOB_TYPE_OS_DEPLOY = "OS deploy"
-"""Operating System deploy job"""
+    LC_CONF = "LCConfig"
+    """A lifecycle controller attribute configuration job"""
 
-JOB_TYPE_RAID_CONF = "RAID configuration"
-"""A RAID configuration job"""
+    LC_EXPORT = "LCExport"
+    """A lifecycle controller export job"""
 
-JOB_TYPE_RT_NO_REBOOT_CONF = "Real-time no reboot configuration"
-"""A real time configuration job without reboot"""
+    LC_LOG_EXPORT = "LCLogExport"
+    """A lifecycle controller log export job"""
 
-JOB_TYPE_REBOOT_FORCE = "Reboot force"
-"""A reboot job with forced shutdown"""
+    LICENSE_EXPORT = "LicenseExport"
+    """A license export job"""
 
-JOB_TYPE_REBOOT_NO_FORCE = "Reboot no force"
-"""A graceful reboot job without forced shutdown"""
+    LICENSE_IMPORT = "LicenseImport"
+    """A license import job"""
 
-JOB_TYPE_REBOOT_POWER_CYCLE = "Reboot power cycle"
-"""A power cycle job"""
+    MSG_REG_EXPORT = "MessageRegistryExport"
+    """Export message registry report job"""
 
-JOB_TYPE_REMOTE_DIAG = "Remote diagnostics"
-"""A remote diagnostics job"""
+    NIC_CONF = "NICConfiguration"
+    """A NIC configuration job"""
 
-JOB_TYPE_REPO_UPDATE = "Repository update"
-"""An update job from a repository"""
+    OS_DEPLOY = "OSDeploy"
+    """Operating System deploy job"""
 
-JOB_TYPE_SA_COL_EXP_HEALTH_DATA = "SA collect and export health data"
-"""Support Assist collect and export health data job"""
+    RAID_CONF = "RAIDConfiguration"
+    """A RAID configuration job"""
 
-JOB_TYPE_SA_COL_HEALTH_DATA = "SA collect health data"
-"""Support Assist collect health data job"""
+    RT_NO_REBOOT_CONF = "RealTimeNoRebootConfiguration"
+    """A real time configuration job without reboot"""
 
-JOB_TYPE_SA_EXP_HEALTH_DATA = "SA export health data"
-"""Support Assist export health data job"""
+    REBOOT_FORCE = "RebootForce"
+    """A reboot job with forced shutdown"""
 
-JOB_TYPE_SA_ISM = "SA expose iSM"
-"""Support Assist expose iDRAC Service Module installer package to host job"""
+    REBOOT_NO_FORCE = "RebootNoForce"
+    """A graceful reboot job without forced shutdown"""
 
-JOB_TYPE_SA_REG = "SA registration"
-"""Support Assist register iDRAC to Dell backend server job"""
+    REBOOT_POWER_CYCLE = "RebootPowerCycle"
+    """A power cycle job"""
 
-JOB_TYPE_SEKM_REKEY = "SEKM rekey"
-"""A Secure Enterprise Key Manager rekey job"""
+    REMOTE_DIAG = "RemoteDiagnostics"
+    """A remote diagnostics job"""
 
-JOB_TYPE_SEKM_STATUS_SET = "SEKM status set"
-"""A Secure Enterprise Key Manager status set job"""
+    REPO_UPDATE = "RepositoryUpdate"
+    """An update job from a repository"""
 
-JOB_TYPE_SHUTDOWN = "Shutdown"
-"""A shutdown job"""
+    SA_COL_EXP_HEALTH_DATA = "SACollectExportHealthData"
+    """Support Assist collect and export health data job"""
 
-JOB_TYPE_SYS_ERASE = "System erase"
-"""A selective system erase job"""
+    SA_COL_HEALTH_DATA = "SACollectHealthData"
+    """Support Assist collect health data job"""
 
-JOB_TYPE_SYS_INFO_CONF = "System info configuration"
-"""A system info configuration job"""
+    SA_EXP_HEALTH_DATA = "SAExportHealthData"
+    """Support Assist export health data job"""
 
-JOB_TYPE_THERMAL_HIST_EXP = "Thermal history export"
-"""A thermal history export job"""
+    SA_ISM = "SAExposeISM"
+    """Support Assist expose ISM installer package to host job"""
 
-JOB_TYPE_UNKNOWN = "Unknown"
-"""An unknown job"""
+    SA_REG = "SARegistration"
+    """Support Assist register iDRAC to Dell backend server job"""
 
-JOB_TYPE_IDRAC_CONF = "iDRAC configuration"
-"""An iDRAC configuration job"""
+    SEKM_REKEY = "SEKMRekey"
+    """A Secure Enterprise Key Manager rekey job"""
+
+    SEKM_STATUS_SET = "SEKMStatusSet"
+    """A Secure Enterprise Key Manager status set job"""
+
+    SHUTDOWN = "Shutdown"
+    """A shutdown job"""
+
+    SYS_ERASE = "SystemErase"
+    """A selective system erase job"""
+
+    SYS_INFO_CONF = "SystemInfoConfiguration"
+    """A system info configuration job"""
+
+    THERMAL_HIST_EXP = "ThermalHistoryExport"
+    """A thermal history export job"""
+
+    UNKNOWN = "Unknown"
+    """An unknown job"""
+
+    IDRAC_CONF = "iDRACConfiguration"
+    """An iDRAC configuration job"""
+
+
+# Backward compatibility
+JOB_TYPE_BIOS_CONF = JobType.BIOS_CONF
+JOB_TYPE_EXPORT_CONF = JobType.EXPORT_CONF
+JOB_TYPE_FC_CONF = JobType.FC_CONF
+JOB_TYPE_FACTORY_CONF_EXPORT = JobType.FACTORY_CONF_EXPORT
+JOB_TYPE_FIRMWARE_ROLLBACK = JobType.FIRMWARE_ROLLBACK
+JOB_TYPE_FIRMWARE_UPDATE = JobType.FIRMWARE_UPDATE
+JOB_TYPE_HW_INVENTORY_EXPORT = JobType.HW_INVENTORY_EXPORT
+JOB_TYPE_IMPORT_CONF = JobType.IMPORT_CONF
+JOB_TYPE_INBAND_BIOS_CONF = JobType.INBAND_BIOS_CONF
+JOB_TYPE_LC_CONF = JobType.LC_CONF
+JOB_TYPE_LC_EXPORT = JobType.LC_EXPORT
+JOB_TYPE_LC_LOG_EXPORT = JobType.LC_LOG_EXPORT
+JOB_TYPE_LICENSE_EXPORT = JobType.LICENSE_EXPORT
+JOB_TYPE_LICENSE_IMPORT = JobType.LICENSE_IMPORT
+JOB_TYPE_MSG_REG_EXPORT = JobType.MSG_REG_EXPORT
+JOB_TYPE_NIC_CONF = JobType.NIC_CONF
+JOB_TYPE_OS_DEPLOY = JobType.OS_DEPLOY
+JOB_TYPE_RAID_CONF = JobType.RAID_CONF
+JOB_TYPE_RT_NO_REBOOT_CONF = JobType.RT_NO_REBOOT_CONF
+JOB_TYPE_REBOOT_FORCE = JobType.REBOOT_FORCE
+JOB_TYPE_REBOOT_NO_FORCE = JobType.REBOOT_NO_FORCE
+JOB_TYPE_REBOOT_POWER_CYCLE = JobType.REBOOT_POWER_CYCLE
+JOB_TYPE_REMOTE_DIAG = JobType.REMOTE_DIAG
+JOB_TYPE_REPO_UPDATE = JobType.REPO_UPDATE
+JOB_TYPE_SA_COL_EXP_HEALTH_DATA = JobType.SA_COL_EXP_HEALTH_DATA
+JOB_TYPE_SA_COL_HEALTH_DATA = JobType.SA_COL_HEALTH_DATA
+JOB_TYPE_SA_EXP_HEALTH_DATA = JobType.SA_EXP_HEALTH_DATA
+JOB_TYPE_SA_ISM = JobType.SA_ISM
+JOB_TYPE_SA_REG = JobType.SA_REG
+JOB_TYPE_SEKM_REKEY = JobType.SEKM_REKEY
+JOB_TYPE_SEKM_STATUS_SET = JobType.SEKM_STATUS_SET
+JOB_TYPE_SHUTDOWN = JobType.SHUTDOWN
+JOB_TYPE_SYS_ERASE = JobType.SYS_ERASE
+JOB_TYPE_SYS_INFO_CONF = JobType.SYS_INFO_CONF
+JOB_TYPE_THERMAL_HIST_EXP = JobType.THERMAL_HIST_EXP
+JOB_TYPE_UNKNOWN = JobType.UNKNOWN
+JOB_TYPE_IDRAC_CONF = JobType.IDRAC_CONF

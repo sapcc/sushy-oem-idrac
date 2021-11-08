@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Dell Inc. or its subsidiaries.
+# Copyright (c) 2021-2022 Dell Inc. or its subsidiaries.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -25,8 +25,7 @@ def _filter_disks_not_in_mode(controller_to_disks, mode):
     """Filters disks that are not in requested mode
 
     :param controller_to_disks: dictionary of controllers and their drives
-    :param mode: constants.PHYSICAL_DISK_STATE_MODE_RAID or
-        constants.PHYSICAL_DISK_STATE_MODE_NONRAID
+    :param mode: constants.PhysicalDiskStateMode
     :returns: dictionary of controllers and their drives that need mode changed
     """
     sushy_raw_device = sushy.VOLUME_TYPE_RAW_DEVICE
@@ -45,9 +44,9 @@ def _filter_disks_not_in_mode(controller_to_disks, mode):
                      or volumes[0].raid_type is None)):
                 is_raw_device = True
 
-            if (mode == sys_cons.PHYSICAL_DISK_STATE_MODE_RAID
+            if (mode == sys_cons.PhysicalDiskStateMode.RAID
                     and is_raw_device
-                    or mode == sys_cons.PHYSICAL_DISK_STATE_MODE_NONRAID
+                    or mode == sys_cons.PhysicalDiskStateMode.NONRAID
                     and not is_raw_device):
                 toprocess_drives.append(drive)
         controller_to_disks[controller] = toprocess_drives
@@ -74,8 +73,7 @@ class DellSystemExtension(oem_base.OEMResourceBase):
 
         Converts only those disks that are not already in requested mode.
 
-        :param mode: constants.PHYSICAL_DISK_STATE_MODE_RAID or
-            constants.PHYSICAL_DISK_STATE_MODE_NONRAID
+        :param mode: constants.PhysicalDiskStateMode
         :param controller_to_disks: dictionary of controllers and their drives.
             Optional, if not provided, processes all RAID, except BOSS,
             controller drives.
@@ -99,10 +97,10 @@ class DellSystemExtension(oem_base.OEMResourceBase):
         for controller, drives in controller_to_disks.items():
             if drives:
                 drive_fqdds = [d.identity for d in drives]
-                if mode == sys_cons.PHYSICAL_DISK_STATE_MODE_RAID:
+                if mode == sys_cons.PhysicalDiskStateMode.RAID:
                     task_monitors.append(
                         self.raid_service.convert_to_raid(drive_fqdds))
-                elif mode == sys_cons.PHYSICAL_DISK_STATE_MODE_NONRAID:
+                elif mode == sys_cons.PhysicalDiskStateMode.NONRAID:
                     task_monitors.append(
                         self.raid_service.convert_to_nonraid(drive_fqdds))
 

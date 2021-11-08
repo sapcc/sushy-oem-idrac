@@ -12,102 +12,149 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# export system config action constants
-
-EXPORT_TARGET_ALL = 'all'
-"""Export entire system configuration"""
-
-EXPORT_TARGET_BIOS = 'BIOS'
-"""Export BIOS related configuration"""
-
-EXPORT_TARGET_IDRAC = 'iDRAC'
-"""Export IDRAC related configuration"""
-
-EXPORT_TARGET_NIC = 'NIC'
-"""Export NIC related configuration"""
-
-EXPORT_TARGET_RAID = 'RAID'
-"""Export RAID related configuration"""
-
-# iDRAC Reset action constants
+import enum
 
 
-RESET_IDRAC_GRACEFUL_RESTART = 'graceful restart'
-"""Perform a graceful shutdown followed by a restart of the system"""
+class ExportTarget(enum.Enum):
+    """Export system config action constants"""
 
-RESET_IDRAC_FORCE_RESTART = 'force restart'
-"""Perform an immediate (non-graceful) shutdown, followed by a restart"""
+    ALL = 'ALL'
+    """Export entire system configuration"""
 
-# ImportSystemConfiguration ShutdownType values
-IMPORT_SHUTDOWN_GRACEFUL = 'graceful shutdown'
-"""Graceful shutdown for Import System Configuration
+    BIOS = 'BIOS'
+    """Export BIOS related configuration"""
 
-Will wait for the host up to 5 minutes to shut down before timing out. The
-operating system can potentially deny or ignore the graceful shutdown request.
-"""
+    IDRAC = 'IDRAC'
+    """Export iDRAC related configuration"""
 
-IMPORT_SHUTDOWN_FORCED = 'forced shutdown'
-"""Forced shutdown for Import System Configuration
+    NIC = 'NIC'
+    """Export NIC related configuration"""
 
-The host server will be powered off immediately. Should be used when it is safe
-to power down the host.
-"""
+    RAID = 'RAID'
+    """Export RAID related configuration"""
 
-IMPORT_SHUTDOWN_NO_REBOOT = 'no shutdown'
-"""No reboot for Import System Configuration
 
-No shutdown performed. Explicit reboot is necessary to apply changes.
-"""
+# Backward compatibility
+EXPORT_TARGET_ALL = ExportTarget.ALL
+EXPORT_TARGET_BIOS = ExportTarget.BIOS
+EXPORT_TARGET_IDRAC = ExportTarget.IDRAC
+EXPORT_TARGET_NIC = ExportTarget.NIC
+EXPORT_TARGET_RAID = ExportTarget.RAID
 
-# ExportUse in ExportSystemConfiguration
-EXPORT_USE_DEFAULT = 'Default'
-"""Default export type
 
-Leaves some attributes commented out and requires user to enable them before
-they can be applied during import.
-"""
+class ResetType(enum.Enum):
+    """iDRAC Reset reset type constants"""
 
-EXPORT_USE_CLONE = 'Clone'
-"""Clone export type suitable for cloning a 'golden' configuration.
+    GRACEFUL = 'Graceful'
+    """Perform a graceful shutdown followed by a restart of the system"""
 
-Compared to Default export type, more attributes are enabled and
-storage settings adjusted to aid in cloning process.
-"""
+    FORCE = 'Force'
+    """Perform an immediate (non-graceful) shutdown, followed by a restart"""
 
-EXPORT_USE_REPLACE = 'Replace'
-"""Replace export type suited for retiring or replacing complete configuration.
 
-Compared to Clone export type, most attributes are enabled and storage settings
-adjusted to aid in the replace process.
-"""
+# Backward compatibility
+RESET_IDRAC_GRACEFUL_RESTART = ResetType.GRACEFUL
+RESET_IDRAC_FORCE_RESTART = ResetType.FORCE
 
-# IncludeInExport in ExportSystemConfiguration
-INCLUDE_EXPORT_DEFAULT = 'Default'
-"""Default for what to include in export.
 
-Does not include read-only attributes, and depending on Export Use, passwords
-are marked as ****** (for Default) or are set to default password values (for
-Clone and Replace).
-"""
+class ShutdownType(enum.Enum):
+    """ImportSystemConfiguration ShutdownType values"""
 
-INCLUDE_EXPORT_READ_ONLY = 'Include read only attributes'
-"""Includes read-only attributes.
+    GRACEFUL = 'Graceful'
+    """Graceful shutdown for Import System Configuration
 
-In addition to values included by Default option, this also includes read-only
-attributes that cannot be changed via Import and are provided for informational
-purposes only.
-"""
+    Will wait for the host up to 5 minutes to shut down before timing out. The
+    operating system can potentially deny or ignore the graceful shutdown
+    request.
+    """
 
-INCLUDE_EXPORT_PASSWORD_HASHES = 'Include password hash values'
-"""Include password hashes.
+    FORCED = 'Forced'
+    """Forced shutdown for Import System Configuration
 
-When using Clone or Replace, include password hashes, instead of default
-password. Can be used to replicate passwords across systems.
-"""
+    The host server will be powered off immediately. Should be used when it is
+    safe to power down the host.
+    """
 
-INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES = ('Include read only attributes and '
-                                            'password hash values')
-"""Includes both read-only attributes and password hashes.
+    NO_REBOOT = 'NoReboot'
+    """No reboot for Import System Configuration
 
-INCLUDE_EXPORT_READ_ONLY and INCLUDE_EXPORT_PASSWORD_HASHES combined
-"""
+    No shutdown performed. Explicit reboot is necessary to apply changes.
+    """
+
+
+# Backward compatibility
+IMPORT_SHUTDOWN_GRACEFUL = ShutdownType.GRACEFUL
+IMPORT_SHUTDOWN_FORCED = ShutdownType.FORCED
+IMPORT_SHUTDOWN_NO_REBOOT = ShutdownType.NO_REBOOT
+
+
+class ExportUse(enum.Enum):
+    """ExportUse in ExportSystemConfiguration"""
+
+    DEFAULT = 'Default'
+    """Default export type
+
+    Leaves some attributes commented out and requires user to enable them
+    before they can be applied during import.
+    """
+
+    CLONE = 'Clone'
+    """Clone export type suitable for cloning a 'golden' configuration.
+
+    Compared to Default export type, more attributes are enabled and
+    storage settings adjusted to aid in cloning process.
+    """
+
+    REPLACE = 'Replace'
+    """Replace export type suited for replacing complete configuration.
+
+    Compared to Clone export type, most attributes are enabled and storage
+    settings adjusted to aid in the replace process.
+    """
+
+
+# Backward compatibility
+EXPORT_USE_DEFAULT = ExportUse.DEFAULT
+EXPORT_USE_CLONE = ExportUse.CLONE
+EXPORT_USE_REPLACE = ExportUse.REPLACE
+
+
+class IncludeInExport(enum.Enum):
+    """IncludeInExport in ExportSystemConfiguration"""
+
+    DEFAULT = 'Default'
+    """Default for what to include in export.
+
+    Does not include read-only attributes, and depending on Export Use,
+    passwords are marked as ****** (for Default) or are set to default password
+    values (for Clone and Replace).
+    """
+
+    READ_ONLY = 'IncludeReadOnly'
+    """Includes read-only attributes.
+
+    In addition to values included by Default option, this also includes
+    read-only attributes that cannot be changed via Import and are provided for
+    informational purposes only.
+    """
+
+    PASSWORD_HASHES = 'IncludePasswordHashValues'
+    """Include password hashes.
+
+    When using Clone or Replace, include password hashes, instead of default
+    password. Can be used to replicate passwords across systems.
+    """
+
+    READ_ONLY_PASSWORD_HASHES = ('IncludeReadOnly,IncludePasswordHashValues')
+    """Includes both read-only attributes and password hashes.
+
+    INCLUDE_EXPORT_READ_ONLY and INCLUDE_EXPORT_PASSWORD_HASHES combined
+    """
+
+
+# Backward compatibility
+INCLUDE_EXPORT_DEFAULT = IncludeInExport.DEFAULT
+INCLUDE_EXPORT_READ_ONLY = IncludeInExport.READ_ONLY
+INCLUDE_EXPORT_PASSWORD_HASHES = IncludeInExport.PASSWORD_HASHES
+INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES =\
+    IncludeInExport.READ_ONLY_PASSWORD_HASHES
