@@ -18,7 +18,6 @@ from sushy import exceptions
 from sushy.resources import base
 
 from sushy_oem_idrac.resources.manager import constants as mgr_cons
-from sushy_oem_idrac.resources.manager import mappings as mgr_maps
 
 LOG = logging.getLogger(__name__)
 
@@ -62,24 +61,22 @@ class DelliDRACCardService(base.ResourceBase):
         if not reset_action.allowed_values:
             LOG.warning('Could not figure out the allowed values for the '
                         'reset idrac action for %s', self.identity)
-            return set(mgr_maps.RESET_IDRAC_VALUE_MAP_REV)
+            return set(mgr_cons.ResetType)
 
-        return set([mgr_maps.RESET_IDRAC_VALUE_MAP[value] for value in
-                    set(mgr_maps.RESET_IDRAC_VALUE_MAP).
-                   intersection(reset_action.allowed_values)])
+        return {v for v in mgr_cons.ResetType
+                if v.value in reset_action.allowed_values}
 
     def reset_idrac(self):
         """Reset the iDRAC.
 
         """
-        reset_type = mgr_cons.RESET_IDRAC_GRACEFUL_RESTART
+        reset_type = mgr_cons.ResetType.GRACEFUL
         valid_resets = self.get_allowed_reset_idrac_values()
         if reset_type not in valid_resets:
             raise exceptions.InvalidParameterValueError(
                 parameter='value', value=reset_type, valid_values=valid_resets)
-        reset_type = mgr_maps.RESET_IDRAC_VALUE_MAP_REV[reset_type]
         target_uri = self._actions.reset_idrac.target_uri
-        payload = {"Force": reset_type}
+        payload = {"Force": reset_type.value}
         LOG.debug('Resetting the iDRAC %s ...', self.identity)
         self._conn.post(target_uri, data=payload)
         LOG.info('The iDRAC %s is being reset', self.identity)

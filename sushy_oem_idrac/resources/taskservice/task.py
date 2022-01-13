@@ -17,7 +17,7 @@ import logging
 from sushy.resources import base
 from sushy.resources.oem import base as oem_base
 
-from sushy_oem_idrac.resources.taskservice import mappings as ts_maps
+from sushy_oem_idrac.resources.taskservice import constants as ts_cons
 
 LOG = logging.getLogger(__name__)
 
@@ -42,10 +42,10 @@ class DellTaskExtension(oem_base.OEMResourceBase):
     applicable.
     """
 
-    job_state = base.MappedField('JobState', ts_maps.JOB_STATE_VALUE_MAP)
+    job_state = base.MappedField('JobState', ts_cons.JobState)
     """Job state"""
 
-    job_type = base.MappedField('JobType', ts_maps.JOB_TYPE_VALUE_MAP)
+    job_type = base.MappedField('JobType', ts_cons.JobType)
     """Job type"""
 
     message = base.Field('Message')

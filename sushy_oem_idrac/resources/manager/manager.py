@@ -32,7 +32,6 @@ from sushy_oem_idrac.resources.manager import idrac_card_service
 from sushy_oem_idrac.resources.manager import job_collection
 from sushy_oem_idrac.resources.manager import job_service
 from sushy_oem_idrac.resources.manager import lifecycle_service
-from sushy_oem_idrac.resources.manager import mappings as mgr_maps
 from sushy_oem_idrac import utils
 
 LOG = logging.getLogger(__name__)
@@ -289,11 +288,9 @@ VFDD\
             LOG.warning('Could not figure out the allowed values for the '
                         'target of export system configuration at %s',
                         self.path)
-            return set(mgr_maps.EXPORT_CONFIG_VALUE_MAP_REV)
+            return set(mgr_cons.ExportTarget)
 
-        return set([mgr_maps.EXPORT_CONFIG_VALUE_MAP[value] for value in
-                    set(mgr_maps.EXPORT_CONFIG_VALUE_MAP).
-                    intersection(allowed_values)])
+        return {v for v in mgr_cons.ExportTarget if v.value in allowed_values}
 
     def get_allowed_export_use_values(self):
         """Get allowed export use values of export system configuration.
@@ -307,11 +304,9 @@ VFDD\
             LOG.warning('Could not figure out the allowed values for the '
                         'export use of export system configuration at %s',
                         self.path)
-            return set(mgr_maps.EXPORT_USE_VALUE_MAP_REV)
+            return set(mgr_cons.ExportUse)
 
-        return set([mgr_maps.EXPORT_USE_VALUE_MAP[value] for value in
-                    set(mgr_maps.EXPORT_USE_VALUE_MAP).
-                    intersection(allowed_values)])
+        return {v for v in mgr_cons.ExportUse if v.value in allowed_values}
 
     def get_allowed_include_in_export_values(self):
         """Get allowed include in export values of export system configuration.
@@ -325,15 +320,14 @@ VFDD\
             LOG.warning('Could not figure out the allowed values for the '
                         'include in export of export system configuration at '
                         '%s', self.path)
-            return set(mgr_maps.INCLUDE_EXPORT_VALUE_MAP_REV)
+            return set(mgr_cons.IncludeInExport)
 
-        return set([mgr_maps.INCLUDE_EXPORT_VALUE_MAP[value] for value
-                   in set(mgr_maps.INCLUDE_EXPORT_VALUE_MAP).
-                   intersection(allowed_values)])
+        return {v for v in mgr_cons.IncludeInExport
+                if v.value in allowed_values}
 
     def _export_system_configuration(
-        self, target, export_use=mgr_cons.EXPORT_USE_DEFAULT,
-        include_in_export=mgr_cons.INCLUDE_EXPORT_DEFAULT):
+        self, target, export_use=mgr_cons.ExportUse.DEFAULT,
+        include_in_export=mgr_cons.IncludeInExport.DEFAULT):
         """Export system configuration.
 
         It exports system configuration for specified target like NIC, BIOS,
@@ -371,26 +365,25 @@ VFDD\
             # Older iDRACs used to include comma separated option in
             # AllowableValues but got removed in newer versions violating
             # AllowableValues validation logic.
-            include_in_export_rev =\
-                mgr_maps.INCLUDE_EXPORT_VALUE_MAP_REV.get(include_in_export)
-            all_items_valid = False
-            if include_in_export_rev is not None:
-                items = include_in_export_rev.split(',')
-                all_items_valid = True
+            all_items_valid = True
+            if not isinstance(include_in_export, mgr_cons.IncludeInExport):
+                all_items_valid = False
+            else:
+                items = include_in_export.value.split(',')
                 for item in items:
-                    if (mgr_maps.INCLUDE_EXPORT_VALUE_MAP[item]
+                    if (mgr_cons.IncludeInExport(item)
                             not in allowed_include_in_export):
                         all_items_valid = False
                         break
+
             if not all_items_valid:
                 raise sushy.exceptions.InvalidParameterValueError(
                     parameter='include_in_export', value=include_in_export,
                     valid_values=allowed_include_in_export)
 
-        target = mgr_maps.EXPORT_CONFIG_VALUE_MAP_REV[target]
-        export_use = mgr_maps.EXPORT_USE_VALUE_MAP_REV[export_use]
-        include_in_export =\
-            mgr_maps.INCLUDE_EXPORT_VALUE_MAP_REV[include_in_export]
+        target = mgr_cons.ExportTarget(target).value
+        export_use = mgr_cons.ExportUse(export_use).value
+        include_in_export = mgr_cons.IncludeInExport(include_in_export).value
 
         action_data = {
             'ShareParameters': {
@@ -433,11 +426,11 @@ VFDD\
         :raises: ExtensionError on failure to perform requested
             operation
         """
-        include_in_export = mgr_cons.INCLUDE_EXPORT_READ_ONLY_PASSWORD_HASHES
 
+        include_in_export = mgr_cons.IncludeInExport.READ_ONLY_PASSWORD_HASHES
         response = self._export_system_configuration(
-            mgr_cons.EXPORT_TARGET_ALL,
-            export_use=mgr_cons.EXPORT_USE_CLONE,
+            mgr_cons.ExportTarget.ALL,
+            export_use=mgr_cons.ExportUse.CLONE,
             include_in_export=include_in_export)
 
         if (response.status_code == _RESPONSE_OK_CODE
@@ -466,7 +459,7 @@ VFDD\
         pxe_port_macs = []
         # Get NIC configuration
         nic_settings = self._export_system_configuration(
-            target=mgr_cons.EXPORT_TARGET_NIC)
+            target=mgr_cons.ExportTarget.NIC)
 
         if nic_settings.status_code != _RESPONSE_OK_CODE:
             error = (('An error occurred when attempting to export '
@@ -506,11 +499,10 @@ VFDD\
             LOG.warning('Could not figure out the allowed values for the '
                         'shutdown type of import system configuration at %s',
                         self.path)
-            return set(mgr_maps.IMPORT_SHUTDOWN_VALUE_MAP_REV)
+            return set(mgr_cons.ShutdownType)
 
-        return set([mgr_maps.IMPORT_SHUTDOWN_VALUE_MAP[value] for value in
-                    set(mgr_maps.IMPORT_SHUTDOWN_VALUE_MAP).
-                    intersection(allowed_values)])
+        return {v for v in mgr_cons.ShutdownType
+                if v.value in allowed_values}
 
     def import_system_configuration(self, import_buffer):
         """Imports system configuration.
@@ -523,7 +515,7 @@ VFDD\
         action_data = dict(self.ACTION_DATA, ImportBuffer=import_buffer)
         # Caller needs to handle system reboot separately to preserve
         # one-time boot settings.
-        shutdown_type = mgr_cons.IMPORT_SHUTDOWN_NO_REBOOT
+        shutdown_type = mgr_cons.ShutdownType.NO_REBOOT
 
         allowed_shutdown_types = self.get_allowed_import_shutdown_type_values()
         if shutdown_type not in allowed_shutdown_types:
@@ -531,8 +523,7 @@ VFDD\
                 parameter='shutdown_type', value=shutdown_type,
                 valid_values=allowed_shutdown_types)
 
-        action_data['ShutdownType'] =\
-            mgr_maps.IMPORT_SHUTDOWN_VALUE_MAP_REV[shutdown_type]
+        action_data['ShutdownType'] = shutdown_type.value
 
         response = self._conn.post(self.import_system_configuration_uri,
                                    data=action_data)

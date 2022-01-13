@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Dell Inc. or its subsidiaries.
+# Copyright (c) 2021-2022 Dell Inc. or its subsidiaries.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -88,7 +88,7 @@ class SystemTestCase(BaseTestCase):
         self.oem_system.raid_service.convert_to_nonraid = mock_nonraid
 
         task_mons = self.oem_system.change_physical_disk_state(
-            sys_cons.PHYSICAL_DISK_STATE_MODE_RAID)
+            sys_cons.PhysicalDiskStateMode.RAID)
 
         self.assertEqual([mock_taskmon], task_mons)
         mock_raid.assert_called_once_with(
@@ -104,7 +104,7 @@ class SystemTestCase(BaseTestCase):
         self.oem_system.raid_service.convert_to_nonraid = mock_nonraid
 
         task_mons = self.oem_system.change_physical_disk_state(
-            sys_cons.PHYSICAL_DISK_STATE_MODE_NONRAID)
+            sys_cons.PhysicalDiskStateMode.NONRAID)
 
         self.assertEqual([mock_taskmon], task_mons)
         mock_raid.assert_not_called()

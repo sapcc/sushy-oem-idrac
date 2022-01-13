@@ -47,8 +47,8 @@ class DelliDRACCardServiceTestCase(BaseTestCase):
                                                data={'Force': 'Graceful'})
 
     def test_get_allowed_reset_idrac_values(self):
-        expected_values = {mgr_cons.RESET_IDRAC_GRACEFUL_RESTART,
-                           mgr_cons.RESET_IDRAC_FORCE_RESTART}
+        expected_values = {mgr_cons.ResetType.GRACEFUL,
+                           mgr_cons.ResetType.FORCE}
         allowed_values = \
             self.idrac_card_service.get_allowed_reset_idrac_values()
         self.assertEqual(expected_values, allowed_values)
@@ -58,8 +58,8 @@ class DelliDRACCardServiceTestCase(BaseTestCase):
         base_property = '#DelliDRACCardService.iDRACReset'
         remove_property = 'Force@Redfish.AllowableValues'
         idrac_service_json['Actions'][base_property].pop(remove_property)
-        expected_values = {mgr_cons.RESET_IDRAC_GRACEFUL_RESTART,
-                           mgr_cons.RESET_IDRAC_FORCE_RESTART}
+        expected_values = {mgr_cons.ResetType.GRACEFUL,
+                           mgr_cons.ResetType.FORCE}
         allowed_values = \
             self.idrac_card_service.get_allowed_reset_idrac_values()
         self.assertEqual(expected_values, allowed_values)
