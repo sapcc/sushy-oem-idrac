@@ -1,5 +1,5 @@
 [gerrit]
 host=review.opendev.org
 port=29418
-project=x/sushy-oem-idrac.git
+project=openstack/sushy-oem-idrac.git
 defaultbranch=stable/wallaby
