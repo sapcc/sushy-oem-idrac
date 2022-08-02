@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2022 Dell Inc. or its subsidiaries.
+# Copyright (c) 2022 Dell Inc. or its subsidiaries.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -12,7 +12,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from sushy_oem_idrac.resources.manager.constants import *  # noqa
-from sushy_oem_idrac.resources.system.constants import *  # noqa
-from sushy_oem_idrac.resources.system.storage.constants import * # noqa
-from sushy_oem_idrac.resources.taskservice.constants import *  # noqa
+import enum
+
+
+class ControllerMode(enum.Enum):
+    """RAID controller modes."""
+
+    RAID = "RAID"
+    """RAID mode."""
+
+    HBA = "HBA"
+    """HBA/Passthru mode. Does not support RAID. For PERC 9 controllers."""
+
+    EHBA = "EnhancedHBA"
+    """Enhanced HBA mode. Limited RAID support. For PERC 10 controllers."""
