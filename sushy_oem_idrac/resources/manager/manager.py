@@ -33,6 +33,7 @@ from sushy_oem_idrac.resources.manager import job_collection
 from sushy_oem_idrac.resources.manager import job_service
 from sushy_oem_idrac.resources.manager import lifecycle_service
 from sushy_oem_idrac import utils
+from sushy_oem_idrac.resources import attributes
 
 LOG = logging.getLogger(__name__)
 
@@ -77,7 +78,6 @@ class DellManagerActionsField(base.CompositeField):
 
 
 class DellManagerExtension(oem_base.OEMResourceBase):
-
     _actions = DellManagerActionsField('Actions')
 
     ACTION_DATA = {
@@ -548,6 +548,17 @@ VFDD\
         self._wait_for_idrac(host, ready_wait_time)
         self._wait_until_idrac_is_ready(host, self._IDRAC_IS_READY_RETRIES,
                                         self._IDRAC_IS_READY_RETRY_DELAY_SEC)
+
+    @property
+    def attributes(self):
+        paths = sushy_utils.get_sub_resource_path_by(
+            self, ["Links", "Oem", "Dell", "DellAttributes"],
+            is_collection=True)
+
+        for path in paths:
+            yield attributes.DellAttributes(self._conn, path,
+                                            self.redfish_version,
+                                            self.registries)
 
     def _wait_for_idrac_state(self, host, alive=True, ping_count=3,
                               retries=24):
