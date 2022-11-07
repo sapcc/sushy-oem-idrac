@@ -16,6 +16,7 @@ import logging
 
 from sushy import exceptions
 from sushy.resources import base
+from sushy.resources import common
 
 from sushy_oem_idrac.resources.manager import constants as mgr_cons
 
@@ -30,6 +31,7 @@ class ForceActionField(base.CompositeField):
 
 class ActionsField(base.CompositeField):
     reset_idrac = ForceActionField('#DelliDRACCardService.iDRACReset')
+    get_kvm_session = common.ActionField('#DelliDRACCardService.GetKVMSession')
 
 
 class DelliDRACCardService(base.ResourceBase):
@@ -80,3 +82,13 @@ class DelliDRACCardService(base.ResourceBase):
         LOG.debug('Resetting the iDRAC %s ...', self.identity)
         self._conn.post(target_uri, data=payload)
         LOG.info('The iDRAC %s is being reset', self.identity)
+
+    def get_kvm_session(self):
+        target_uri = self._actions.get_kvm_session.target_uri
+        LOG.debug('Getting KVM session from iDRAC %s ...', self.identity)
+        data = {"SessionTypeName": "ssl_cert.txt"}
+        result = self._conn.post(target_uri, data=data)
+        LOG.info('Got KVM session from iDRAC', result)
+        if result.status_code in (200, 202):
+            return result.json()
+        return None
