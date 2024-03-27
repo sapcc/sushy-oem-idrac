@@ -138,7 +138,7 @@ VFDD\
     @property
     @sushy_utils.cache_it
     def idrac_card_service(self):
-        """Property to reference `DelliDRACCardService` instance of this manager.
+        """Reference to `DelliDRACCardService` instance of this manager.
 
         """
         path = sushy_utils.get_sub_resource_path_by(
