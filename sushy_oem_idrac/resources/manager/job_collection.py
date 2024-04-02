@@ -21,7 +21,6 @@ LOG = logging.getLogger(__name__)
 
 class DellJobCollection(base.ResourceBase):
 
-    identity = base.Field('Id', required=True)
     _JOB_EXPAND = '?$expand=.($levels=1)'
 
     def __init__(self, connector, identity, redfish_version=None,
