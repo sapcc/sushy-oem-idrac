@@ -16,6 +16,8 @@ import logging
 
 from sushy.resources import base
 
+from sushy_oem_idrac import constants
+
 LOG = logging.getLogger(__name__)
 
 
@@ -48,8 +50,7 @@ class DellJobCollection(base.ResourceBase):
         job_response = self._conn.get(job_expand_uri)
         data = job_response.json()
         for job in data[u'Members']:
-            if ((job[u'JobState'] == 'Scheduled') or (
-                    job[u'JobState'] == 'Running')):
+            if job[u'JobState'] in constants.INCOMPLETE_JOB_STATES:
                 unfinished_jobs.append(job['Id'])
         LOG.info('Got unfinished jobs')
         return unfinished_jobs

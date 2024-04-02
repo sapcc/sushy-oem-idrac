@@ -15,3 +15,6 @@
 IDRAC_CONFIG_PENDING = 'LC068'
 IDRAC_JOB_RUNNING = 'RAC0679'
 NO_FOREIGN_CONFIG = 'STOR018'
+INCOMPLETE_JOB_STATES = ['Scheduled',
+                         'Running',
+                         'Paused']
