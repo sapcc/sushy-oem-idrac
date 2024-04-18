@@ -1,0 +1,6 @@
+- job:
+    name: sushy-oem-idrac-tox-codespell
+    parent: openstack-tox
+    timeout: 7200
+    vars:
+      tox_envlist: codespell
